@@ -10,5 +10,4 @@ def test_dummy_function():
     assert res == 1
 
     res = return_two()
-
     assert res == 2
