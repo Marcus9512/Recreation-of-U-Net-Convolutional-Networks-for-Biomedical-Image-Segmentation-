@@ -2,13 +2,12 @@
 Test the dummy file
 '''
 
-from src.Dummy import Dummy
+from src.check_travis.dummy import *
 
 def test_dummy_function():
 
-    res = Dummy.return_one()
+    res = return_one()
     assert res == 1
 
-    res = Dummy.return_two()
-
+    res = return_two()
     assert res == 2
