@@ -17,6 +17,6 @@ Make sure that you are in the root folder for the project and run the command.
 ## Run the network
 
 ## Github tips
-* `git checkout -b branchname` create a branchname`
-* Push youre changes to the branch and create a pull requst via this github page
+* `git checkout -b branchname` create a branch
+* Push youre changes to the branch and create a pull-requst via this github page
 * If the tests passes, merge the and delete the branch
