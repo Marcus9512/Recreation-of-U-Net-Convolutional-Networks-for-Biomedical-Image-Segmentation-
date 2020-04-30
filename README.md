@@ -7,6 +7,7 @@ The report this project is based on can be found [here](https://arxiv.org/pdf/15
 ## Requirements
 * pytest
 * numpy
+* Pytourch
 
 ## Install requirements
 Run the following command in the terminal to install requirements.
