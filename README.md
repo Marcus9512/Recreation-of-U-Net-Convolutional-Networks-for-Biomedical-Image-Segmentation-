@@ -8,7 +8,7 @@ The report this project i based on can be found [here](https://arxiv.org/pdf/150
 * pytest
 * numpy
 
-## Install requierments
+## Install requirements
 Run the following command in the terminal to install requierments.
 `pip3 install -r requierments.txt`
 
