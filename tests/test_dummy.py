@@ -2,7 +2,7 @@
 Test the dummy file
 '''
 
-from src.Check_travis.dummy import *
+from src.check_travis.dummy import *
 
 def test_dummy_function():
 
