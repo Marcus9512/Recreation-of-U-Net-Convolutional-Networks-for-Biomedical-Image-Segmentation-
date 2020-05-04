@@ -1,7 +1,5 @@
 import numpy as np
 from PIL import Image
-import os
-
 
 def create_data(path, type, n_frames):
     """
@@ -38,15 +36,16 @@ def create_data(path, type, n_frames):
 
 
 if __name__ == "__main__":
-    path_train = 'C:\\Users\\Marcu\\Githubs\\dd2424_project\\data\\'
+    path_train = 'data/'
     
     train_volume = create_data(path_train, 'train_v', 30)
-
     train_labels = create_data(path_train, 'train_l', 30)
-    
     test_volume = create_data(path_train, 'test_v', 30)
+
+    print(train_volume)
+    print(train_labels)
+    print(test_volume)
 
     np.save(' train_volume.npy', train_volume)
     np.save('train_labels.npy', train_labels)
     np.save('test_volume.npy', test_volume)
-    
