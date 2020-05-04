@@ -77,10 +77,35 @@ class U_NET(nn.Module):
         # poolings
         self.pool1 = nn.MaxPool2d(2, 2)
 
-
+        # upsampling
+        self.up1 = Up_conv(1024, 512)
+        self.up2 = Up_conv(512, 256)
+        self.up3 = Up_conv(256, 128)
+        self.up4 = Up_conv(128, 64)
 
     def forward(self, x):
-        x =1
+        # U1
+        x1 = self.conv1(x)
+        x1 = self.conv2(x1)
+
+        #U2
+        x2 = self.conv3(self.pool1(x1))
+        x2 = self.conv4(x2)
+
+        # U3
+        x3 = self.conv5(self.pool1(x2))
+        x3 = self.conv6(x3)
+
+        # U4
+        x4 = self.conv7(self.pool1(x3))
+        x4 = self.conv8(x4)
+
+        # U5 lowest
+        x5 = self.conv9(self.pool1(x4))
+        x5 = self.conv10(x5)
+
+        #Implement up-pass
+
 
 class Conv(nn.Module):
 
@@ -125,12 +150,14 @@ class Up_conv(nn.Module):
 
 
     def forward(self, x):
-        self.Up_conv(x)
-        return self.conv2
+        #self.Up_conv(x)
+        #return self.conv2
+        return self.conv2(self.conv1(self.up(x)))
 
 if __name__ == '__main__':
     main_device = init_main_device()
     u_net = U_NET()
     u_net.to(main_device)
+
 
 
