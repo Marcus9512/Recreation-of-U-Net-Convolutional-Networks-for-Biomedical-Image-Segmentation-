@@ -39,13 +39,13 @@ def check_gpu_card():
         print("Could not find pycuda and thus not show amazing stats about youre GPU, have you installed CUDA?")
         pass
 
-class U_NET():
+class U_NET(nn.Module):
 
-    def __init__(self, main_device):
+    def __init__(self):
         '''
         setup
         '''
-        self.main_device = main_device
+        super(U_NET, self).__init__()
         self.set_up_network()
 
     def set_up_network(self):
@@ -54,26 +54,76 @@ class U_NET():
         :return:
         '''
 
-    def pre_process(self):
+        # U 1
+        self.conv1 = nn.Conv2d(1, 64, 3)
+        self.conv2 = nn.Conv2d(64, 64, 3)
+
+        # U 2
+        self.conv3 = nn.Conv2d(64, 128, 3)
+        self.conv4 = nn.Conv2d(128, 128, 3)
+
+        # U 3
+        self.conv5 = nn.Conv2d(128, 256, 3)
+        self.conv6 = nn.Conv2d(256, 256, 3)
+
+        # U 4
+        self.conv7 = nn.Conv2d(265, 512, 3)
+        self.conv8 = nn.Conv2d(512, 512, 3)
+
+        # U 5 Lowest layer
+        self.conv9 = nn.Conv2d(512, 1024, 3)
+        self.conv10 = nn.Conv2d(1024, 1024, 3)
+
+        # poolings
+        self.pool1 =  nn.MaxPool2d(2, 2)
+
+        # upsamplings
+        self.up1 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+
+
+    def forward(self, x):
+        x =1
+
+class Conv(nn.Module):
+
+    def __init__(self):
         '''
-        If we need some preprocessing
+        init
+        '''
+        super(Conv, self).__init__()
+        self.set_up_network()
+
+    def set_up_network(self):
+        '''
+        setup the convolutional net
         :return:
         '''
 
-    def train(self):
+    def forward(self, x):
+        x = 1
+
+
+class Up_conv(nn.Module):
+
+    def __init__(self):
         '''
-        Train the network, maybe should be done on CUDAS
+        init
+        '''
+        super(Up_conv, self).__init__()
+        self.set_up_network()
+
+    def set_up_network(self):
+        '''
+        setup the convolutional net
         :return:
         '''
 
-    def calculate_accuracy(self):
-        '''
-        If requiered, implement this method (Maybe exist preimplemented in Pytorch?)
-        :return:
-        '''
+    def forward(self, x):
+        x = 1
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    u_net = U_NET(main_device)
+    u_net = U_NET()
+    u_net.to(main_device)
 
 
