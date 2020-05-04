@@ -111,9 +111,9 @@ class Up_conv(nn.Module):
         init
         '''
         super(Up_conv, self).__init__()
-        self.set_up_network()
+        self.set_up_network(channels_in, channels_out)
 
-    def set_up_network(self):
+    def set_up_network(self, channels_in, channels_out):
         '''
         setup the convolutional net
         :return:
