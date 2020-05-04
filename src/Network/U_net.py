@@ -55,30 +55,27 @@ class U_NET(nn.Module):
         '''
 
         # U 1
-        self.conv1 = nn.Conv2d(1, 64, 3)
-        self.conv2 = nn.Conv2d(64, 64, 3)
+        self.conv1 = Conv(1, 64)
+        self.conv2 = Conv(64, 64)
 
         # U 2
-        self.conv3 = nn.Conv2d(64, 128, 3)
-        self.conv4 = nn.Conv2d(128, 128, 3)
+        self.conv3 = Conv(64, 128)
+        self.conv4 = Conv(128, 128)
 
         # U 3
-        self.conv5 = nn.Conv2d(128, 256, 3)
-        self.conv6 = nn.Conv2d(256, 256, 3)
+        self.conv5 = Conv(128, 256)
+        self.conv6 = Conv(256, 256)
 
         # U 4
-        self.conv7 = nn.Conv2d(265, 512, 3)
-        self.conv8 = nn.Conv2d(512, 512, 3)
+        self.conv7 = Conv(265, 512)
+        self.conv8 = Conv(512, 512)
 
         # U 5 Lowest layer
-        self.conv9 = nn.Conv2d(512, 1024, 3)
-        self.conv10 = nn.Conv2d(1024, 1024, 3)
+        self.conv9 = Conv(512, 1024)
+        self.conv10 = Conv(1024, 1024)
 
         # poolings
-        self.pool1 =  nn.MaxPool2d(2, 2)
-
-        # upsamplings
-        self.up1 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.pool1 = nn.MaxPool2d(2, 2)
 
 
 
@@ -87,21 +84,25 @@ class U_NET(nn.Module):
 
 class Conv(nn.Module):
 
-    def __init__(self):
+    def __init__(self, channels_in, channels_out):
         '''
         init
         '''
         super(Conv, self).__init__()
-        self.set_up_network()
+        self.set_up_network(channels_in, channels_out)
 
-    def set_up_network(self):
+    def set_up_network(self, channels_in, channels_out):
         '''
         setup the convolutional net
         :return:
         '''
+        self.module = nn.Sequential()
+        self.module.add_module("conv",nn.Conv2d(channels_in, channels_out, 3))
+        self.module.add_module("relu", nn.ReLU())
 
     def forward(self, x):
-        x = 1
+        res = self.module(x)
+        return res
 
 
 class Up_conv(nn.Module):
@@ -124,7 +125,7 @@ class Up_conv(nn.Module):
 
 
     def forward(self, x):
-        x = self.Up_conv(x)
+        self.Up_conv(x)
         return self.conv2
 
 if __name__ == '__main__':
