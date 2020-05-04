@@ -1,4 +1,5 @@
 import torch
+import torch.nn as nn
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -38,30 +39,41 @@ def check_gpu_card():
         print("Could not find pycuda and thus not show amazing stats about youre GPU, have you installed CUDA?")
         pass
 
-def pre_process():
-    '''
-    If we need some preprocessing
-    :return:
-    '''
+class U_NET():
 
-def set_up_network():
-    '''
-    setup the convolutional net
-    :return:
-    '''
+    def __init__(self, main_device):
+        '''
+        setup
+        '''
+        self.main_device = main_device
+        self.set_up_network()
 
-def train():
-    '''
-    Train the network, maybe should be done on CUDAS
-    :return:
-    '''
+    def set_up_network(self):
+        '''
+        setup the convolutional net
+        :return:
+        '''
 
-def calculate_accuracy():
-    '''
-    If requiered, implement this method (Maybe exist preimplemented in Pytorch?)
-    :return:
-    '''
+    def pre_process(self):
+        '''
+        If we need some preprocessing
+        :return:
+        '''
+
+    def train(self):
+        '''
+        Train the network, maybe should be done on CUDAS
+        :return:
+        '''
+
+    def calculate_accuracy(self):
+        '''
+        If requiered, implement this method (Maybe exist preimplemented in Pytorch?)
+        :return:
+        '''
 
 if __name__ == '__main__':
-    init_main_device()
-    train()
+    main_device = init_main_device()
+    u_net = U_NET(main_device)
+
+
