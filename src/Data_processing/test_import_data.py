@@ -2,13 +2,12 @@
 Test the dummy file
 '''
 
-from src.check_travis.dummy import *
-from import_data import create_data
+from src.Data_processing.import_data import *
 
 def test_dummy_function():
 
 
-    path_train = 'C:\\Users\\Marcu\\Githubs\\dd2424_project\\data\\'
+    path_train = "data/"
     
     res = create_data(path_train, 'train_v', 30)
     assert res.shape == (30, 512, 512)
