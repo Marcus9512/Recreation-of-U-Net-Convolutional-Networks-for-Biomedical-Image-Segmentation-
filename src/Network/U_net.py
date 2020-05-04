@@ -81,6 +81,7 @@ class U_NET(nn.Module):
         self.up1 = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
 
 
+
     def forward(self, x):
         x =1
 
@@ -105,7 +106,7 @@ class Conv(nn.Module):
 
 class Up_conv(nn.Module):
 
-    def __init__(self):
+    def __init__(self, channels_in, channels_out):
         '''
         init
         '''
@@ -117,9 +118,14 @@ class Up_conv(nn.Module):
         setup the convolutional net
         :return:
         '''
+        self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
+        self.conv1 = Conv(channels_in, channels_out)
+        self.conv2 = Conv(channels_out, channels_out)
+
 
     def forward(self, x):
-        x = 1
+        x = self.Up_conv(x)
+        return self.conv2
 
 if __name__ == '__main__':
     main_device = init_main_device()
