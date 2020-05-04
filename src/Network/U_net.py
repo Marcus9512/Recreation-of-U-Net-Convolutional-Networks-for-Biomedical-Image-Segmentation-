@@ -125,7 +125,7 @@ class Up_conv(nn.Module):
 
 
     def forward(self, x):
-        x = self.Up_conv(x)
+        self.Up_conv(x)
         return self.conv2
 
 if __name__ == '__main__':
