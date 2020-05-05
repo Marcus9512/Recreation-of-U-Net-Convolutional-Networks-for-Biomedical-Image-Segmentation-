@@ -2,10 +2,14 @@ import torch
 import torch.nn as nn
 import torch.optim as opt
 import torch.utils.data as ut
+
+from src.Tools.Tools import *
+
 import numpy as np
-import src.Data_processing.augment_data as ad;
+import src.Data_processing.augment_data as ad
 
 from src.Data_processing.import_data import *
+from src.Data_processing.data_container import *
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -162,7 +166,7 @@ class Conv(nn.Module):
         :return:
         '''
         self.module = nn.Sequential()
-        self.module.add_module("conv",nn.Conv2d(channels_in, channels_out, 3))
+        self.module.add_module("conv",nn.Conv2d(channels_in, channels_out, 3, padding=1))
         self.module.add_module("relu", nn.ReLU())
 
     def forward(self, x):
@@ -194,7 +198,7 @@ class Up_conv(nn.Module):
         #return self.conv2
         return self.conv2(self.up(x))
 
-def train(device, epochs):
+def train(device, epochs, batch_size):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
     https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -205,30 +209,38 @@ def train(device, epochs):
     frames = 30 # aka length of dataset
 
     #Load data
-    path_train = '../../data/'
-    train_volume = torch.from_numpy(create_data(path_train, 'train_v', frames))
-    train_labels = torch.from_numpy(create_data(path_train, 'train_l', frames))
-    test_volume = torch.from_numpy(create_data(path_train, 'test_v', frames))
 
-    #dataloader = ut.DataLoader()
-    augmented_data = ad.augment(train_volume[1])
+    path_train = 'data/'
+    raw_train = torch.from_numpy(create_data(path_train, 'train_v', frames))
+    raw_labels = torch.from_numpy(create_data(path_train, 'train_l', frames))
+    raw_test = torch.from_numpy(create_data(path_train, 'test_v', frames))
+
+    train, train_labels, val, val_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8)
+
+    batch_train = Custom_dataset(train, train_labels)
+    batch_val = Custom_dataset(val, val_labels)
+
+    dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True)
+    dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True)
+
+    #augmented_data = ad.augment(train_volume[1])
+
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
 
     for e in range(epochs):
-        # Shuffle data
-        index = np.arange(frames)
-        np.random.shuffle(index)
-
         loss_stat = 0
-        for i in range(frames):
-            train = train_volume[index[i]]
-            label = train_labels[index[i]]
+        for i in dataloader_train:
+            train = i["data"]
+            label = i["label"]
+
+            print(train.size())
 
             #reset gradients
             optimizer.zero_grad()
+            train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
             loss = evaluation(out, label)
             loss.backward()
@@ -238,6 +250,6 @@ def train(device, epochs):
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, 2)
+    train(main_device, 2, 2)
 
 

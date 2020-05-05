@@ -24,7 +24,7 @@ def create_data(path, type, n_frames):
             frame = np.zeros((img.width, img.height))
             for j in range(frame.shape[0]):
                 for k in range(frame.shape[1]):
-                    frame[j,k] = img.getpixel((j, k))
+                    frame[j,k] = img.getpixel((j, k)) / 255
 
             all_imgs.append(frame)
 
