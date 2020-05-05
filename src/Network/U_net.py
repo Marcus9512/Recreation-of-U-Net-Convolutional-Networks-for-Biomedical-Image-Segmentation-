@@ -5,6 +5,9 @@ import torch.utils.data as ut
 
 from src.Tools.Tools import *
 
+import numpy as np
+import src.Data_processing.augment_data as ad
+
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 
@@ -206,6 +209,7 @@ def train(device, epochs, batch_size):
     frames = 30 # aka length of dataset
 
     #Load data
+
     path_train = 'data/'
     raw_train = torch.from_numpy(create_data(path_train, 'train_v', frames))
     raw_labels = torch.from_numpy(create_data(path_train, 'train_l', frames))
@@ -218,6 +222,9 @@ def train(device, epochs, batch_size):
 
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True)
+
+    #augmented_data = ad.augment(train_volume[1])
+
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
@@ -244,6 +251,5 @@ def train(device, epochs, batch_size):
 if __name__ == '__main__':
     main_device = init_main_device()
     train(main_device, 2, 2)
-
 
 
