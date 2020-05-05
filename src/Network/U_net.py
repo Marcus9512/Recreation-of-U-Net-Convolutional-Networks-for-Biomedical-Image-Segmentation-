@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 import torch.optim as opt
 import numpy as np
+import src.Data_processing.augment_data as ad;
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -168,36 +169,37 @@ def train(device, epochs):
     frames = 30 # aka length of dataset
 
     #Load data
-    path_train = 'data/'
+    path_train = '../../data/'
     train_volume = im.create_data(path_train, 'train_v', frames)
     train_labels = im.create_data(path_train, 'train_l', frames)
     test_volume = im.create_data(path_train, 'test_v', frames)
 
-    #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    evaluation = nn.CrossEntropyLoss()
-    optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.9)
+    ad.augment(train_volume[1])
 
-    for e in range(epochs):
-        # Shuffle data
-        index = np.arange(frames)
-        np.random.shuffle(index)
-
-        for i in range(frames):
-            train = train_volume[index[i]]
-            label = train_labels[index[i]]
-
-            #reset gradients
-            optimizer.zero_grad()
-            out = u_net(train)
-            loss = evaluation(out, label)
-            loss.backward()
-            optimizer.step()
-
-            loss_stat = loss.item()
+    # #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
+    # evaluation = nn.CrossEntropyLoss()
+    # optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.9)
+    #
+    # for e in range(epochs):
+    #     # Shuffle data
+    #     index = np.arange(frames)
+    #     np.random.shuffle(index)
+    #
+    #     for i in range(frames):
+    #         train = train_volume[index[i]]
+    #         label = train_labels[index[i]]
+    #
+    #         #reset gradients
+    #         optimizer.zero_grad()
+    #         out = u_net(train)
+    #         loss = evaluation(out, label)
+    #         loss.backward()
+    #         optimizer.step()
+    #
+    #         loss_stat = loss.item()
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device)
-
+    train(main_device, 10)
 
 
