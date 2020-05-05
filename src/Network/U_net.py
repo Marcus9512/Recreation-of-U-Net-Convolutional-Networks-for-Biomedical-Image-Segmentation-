@@ -1,8 +1,10 @@
-import src.Data_processing.import_data as im
 import torch
 import torch.nn as nn
 import torch.optim as opt
+import torch.utils.data as ut
 import numpy as np
+
+from src.Data_processing.import_data import *
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -77,14 +79,31 @@ class U_NET(nn.Module):
         self.conv9 = Conv(512, 1024)
         self.conv10 = Conv(1024, 1024)
 
+        # U6
+        self.conv11 = Conv(1024, 512)
+
+        # U7
+        self.conv12 = Conv(512, 256)
+
+        # U8
+        self.conv13 = Conv(256, 128)
+
+        # U9
+        self.conv14 = Conv(128, 64)
+
         # poolings
-        self.pool1 = nn.MaxPool2d(2, 2)
+        self.pool1 = nn.MaxPool2d(2,2)
 
         # upsampling
         self.up1 = Up_conv(1024, 512)
         self.up2 = Up_conv(512, 256)
         self.up3 = Up_conv(256, 128)
         self.up4 = Up_conv(128, 64)
+
+        # 1x1 convulution
+        self.conv1x1 = nn.Conv2d(64, 2, 1)
+
+
 
     def forward(self, x):
         # U1
@@ -109,6 +128,23 @@ class U_NET(nn.Module):
 
         #Implement up-pass
 
+        # U6
+        x6 = self.conv11(torch.cat([x4, self.up1(x5)], dim=1))
+        x6 = self.conv8(x6)
+
+        # U7
+        x7 = self.conv12(torch.cat([x3, self.up2(x6)], dim=1))
+        x7 = self.conv6(x7)
+
+        # U8
+        x8 = self.conv13(torch.cat([x2, self.up3(x7)], dim=1))
+        x8 = self.conv4(x8)
+
+        # U9
+        x9 = self.conv14(torch.cat([x1, self.up4(x8)], dim=1))
+        x9 = self.conv2(x9)
+
+        return self.conv1x1(x9)
 
 class Conv(nn.Module):
 
@@ -148,14 +184,14 @@ class Up_conv(nn.Module):
         :return:
         '''
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
-        self.conv1 = Conv(channels_in, channels_out)
-        self.conv2 = Conv(channels_out, channels_out)
+       # self.conv1 = Conv(channels_in, channels_out)
+        self.conv2 = nn.Conv2d(channels_in, channels_out, 2)
 
 
     def forward(self, x):
         #self.Up_conv(x)
         #return self.conv2
-        return self.conv2(self.conv1(self.up(x)))
+        return self.conv2(self.up(x))
 
 def train(device, epochs):
     '''
@@ -169,19 +205,23 @@ def train(device, epochs):
 
     #Load data
     path_train = 'data/'
-    train_volume = im.create_data(path_train, 'train_v', frames)
-    train_labels = im.create_data(path_train, 'train_l', frames)
-    test_volume = im.create_data(path_train, 'test_v', frames)
+    train_volume = torch.from_numpy(create_data(path_train, 'train_v', frames))
+    train_labels = torch.from_numpy(create_data(path_train, 'train_l', frames))
+    test_volume = torch.from_numpy(create_data(path_train, 'test_v', frames))
+
+    #dataloader = ut.DataLoader()
+
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
-    optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.9)
+    optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
 
     for e in range(epochs):
         # Shuffle data
         index = np.arange(frames)
         np.random.shuffle(index)
 
+        loss_stat = 0
         for i in range(frames):
             train = train_volume[index[i]]
             label = train_labels[index[i]]
@@ -193,11 +233,11 @@ def train(device, epochs):
             loss.backward()
             optimizer.step()
 
-            loss_stat = loss.item()
+            loss_stat += loss.item()
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device)
+    train(main_device, 2)
 
 
 

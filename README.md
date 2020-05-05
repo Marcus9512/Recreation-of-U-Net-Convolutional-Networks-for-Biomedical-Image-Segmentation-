@@ -7,7 +7,8 @@ The report this project is based on can be found [here](https://arxiv.org/pdf/15
 ## Requirements
 * pytest
 * numpy
-* Pytorch
+* pytorch
+* pillow
 
 ## Install requirements
 Run the following command in the terminal to install requirements.
@@ -21,6 +22,8 @@ Make sure that you are in the root folder for the project and run the command.
 `python3 -m pytest`
 
 ## Run the network
+* Run `python3 setup.py install --user`
+* Run `python3 src/network/U_net.py`
 
 ## Github tips
 * `git checkout -b branchname` create a branch
