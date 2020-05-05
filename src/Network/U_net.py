@@ -174,29 +174,29 @@ def train(device, epochs):
     train_labels = im.create_data(path_train, 'train_l', frames)
     test_volume = im.create_data(path_train, 'test_v', frames)
 
-    ad.augment(train_volume[1])
+    augmented_data = ad.augment(train_volume[1])
 
-    # #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    # evaluation = nn.CrossEntropyLoss()
-    # optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.9)
-    #
-    # for e in range(epochs):
-    #     # Shuffle data
-    #     index = np.arange(frames)
-    #     np.random.shuffle(index)
-    #
-    #     for i in range(frames):
-    #         train = train_volume[index[i]]
-    #         label = train_labels[index[i]]
-    #
-    #         #reset gradients
-    #         optimizer.zero_grad()
-    #         out = u_net(train)
-    #         loss = evaluation(out, label)
-    #         loss.backward()
-    #         optimizer.step()
-    #
-    #         loss_stat = loss.item()
+    #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
+    evaluation = nn.CrossEntropyLoss()
+    optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.9)
+
+    for e in range(epochs):
+        # Shuffle data
+        index = np.arange(frames)
+        np.random.shuffle(index)
+
+        for i in range(frames):
+            train = train_volume[index[i]]
+            label = train_labels[index[i]]
+
+            #reset gradients
+            optimizer.zero_grad()
+            out = u_net(train)
+            loss = evaluation(out, label)
+            loss.backward()
+            optimizer.step()
+
+            loss_stat = loss.item()
 
 if __name__ == '__main__':
     main_device = init_main_device()
