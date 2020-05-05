@@ -2,4 +2,6 @@ pytest>=5.3.5
 numpy>=1.16.2
 torch>=1.5.0
 pillow>=7.1.2
+elasticdeform>=0.4.6
+imageio>=2.8.0
 matplotlib>=3.2.0
