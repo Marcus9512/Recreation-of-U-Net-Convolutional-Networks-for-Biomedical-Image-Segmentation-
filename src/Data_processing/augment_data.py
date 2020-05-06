@@ -8,16 +8,20 @@ def augment(X, Y, reps=1):
      '''
     # X = numpy.zeros((200, 300))
     # X[::10, ::10] = 1
-
-    X_deformed = np.array([])
-    Y_deformed = np.array([])
+    X_deformed = []
+    Y_deformed = []
 
     for i in range(len(X)):
-        # apply deformation with a random 3 x 3 grid
+        # apply deformation with a random 3 x 3 grid and standard dev=10 pixels
         for _ in range(reps):
-            [xi, yi] = elasticdeform.deform_random_grid([X[i], Y[i]], sigma=10, points=3)
-            np.append(X_deformed, xi)
-            np.append(Y_deformed, yi)
+            [xi, yi] = elasticdeform.deform_random_grid([X[i][0], Y[i][0]], sigma=10, points=3)
+            X_deformed += [xi]
+            Y_deformed += [yi]
+
+    X_deformed = np.asarray(X_deformed)
+    Y_deformed = np.asarray(Y_deformed)
+    X_deformed = np.expand_dims(X_deformed, 1)
+    Y_deformed = np.expand_dims(Y_deformed, 1)
     return [X_deformed, Y_deformed]
 
     # imageio.imsave('test_X.png', X)
