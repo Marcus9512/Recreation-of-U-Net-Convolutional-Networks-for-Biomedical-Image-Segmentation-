@@ -34,9 +34,16 @@ def create_data(path, type, n_frames):
 
     return np.asarray(all_imgs)
 
+def test(path):
+    img = Image.open(path + 'train-volume.tif')
+    print(np.array(img).shape)
 
 if __name__ == "__main__":
-    path_train = '../'
+    path_train = 'data/'
+
+    test(path_train)
+
+    exit()
 
     train_volume = create_data(path_train, 'train_v', 30)
     train_labels = create_data(path_train, 'train_l', 30)

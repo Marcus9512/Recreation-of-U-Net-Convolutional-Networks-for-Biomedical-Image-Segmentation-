@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as opt
 import torch.utils.data as ut
 
-from src.Tools.Tools import *
+from src.tools.Tools import *
 
 import numpy as np
 import src.Data_processing.augment_data as ad
