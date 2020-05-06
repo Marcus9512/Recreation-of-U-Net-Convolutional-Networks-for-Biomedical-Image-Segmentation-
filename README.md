@@ -25,6 +25,10 @@ Make sure that you are in the root folder for the project and run the command.
 * Run `python3 setup.py install --user`
 * Run `python3 src/network/U_net.py`
 
+## Tensorboard
+* You need tensorflow installed `pip install tensorflow`
+* Start tensorboard with `tensorboard --logdir=runs`
+
 ## Github tips
 * `git checkout -b branchname` create a branch
 * Push your changes to the branch and create a pull-requst via this github page
