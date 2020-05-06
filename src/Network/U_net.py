@@ -1,8 +1,10 @@
 import os
 import torch
+import torchvision
 import torch.nn as nn
 import torch.optim as opt
 import torch.utils.data as ut
+import torch.utils.tensorboard as tb
 
 from src.Tools.Tools import *
 from src.Data_processing.import_data import *
@@ -213,6 +215,8 @@ def train(device, epochs, batch_size):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
     https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+
+    SummaryWriter https://pytorch.org/docs/stable/tensorboard.html
     '''
     u_net = U_NET()
     u_net.to(device)
@@ -242,11 +246,14 @@ def train(device, epochs, batch_size):
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True)
 
-    print(dataloader_train)
+    len_t = len(dataloader_train)
+    len_v = len(dataloader_val)
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
+
+    summary = tb.SummaryWriter()
 
     for e in range(epochs):
         print("Epoch: ",e," of ",epochs)
@@ -254,6 +261,7 @@ def train(device, epochs, batch_size):
 
         # Training
         u_net.train()
+        pos = 0
         for i in dataloader_train:
             train = i["data"]
             label = i["label"]
@@ -262,6 +270,7 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
+            summary.add_image('training',torchvision.utils.make_grid(out), int(pos)+ e*len_t)
 
             label = label.to(device=device, dtype=torch.long)
             label = label.squeeze(1)
@@ -270,11 +279,13 @@ def train(device, epochs, batch_size):
             optimizer.step()
 
             loss_training += loss.item()
+            pos += 1
 
         loss_val = 0
 
         # Validation
         u_net.eval()
+        pos = 0
         for j in dataloader_val:
             val = j["data"]
             label_val = j["label"]
@@ -282,13 +293,22 @@ def train(device, epochs, batch_size):
 
             with torch.no_grad():
                 out = u_net(val)
+                summary.add_image('val', torchvision.utils.make_grid(out) , int(pos) + e * len_v)
+
                 label_val = label_val.to(device=device, dtype=torch.long)
                 label_val = label_val.squeeze(1)
                 loss = evaluation(out, label_val)
                 loss_val += loss.item()
+                pos += 1
 
         print("Training loss: ",loss_training)
         print("Validation loss: ", loss_val)
+        summary.add_scalar('Loss/train', loss_training, e)
+        summary.add_scalar('Loss/val', loss_val, e)
+        # print(torch.cuda.memory_summary(device=None, abbreviated=False))
+
+    summary.flush()
+    summary.close()
 
     #Evaluation
     glob_path = os.path.dirname(os.path.realpath("src"))
