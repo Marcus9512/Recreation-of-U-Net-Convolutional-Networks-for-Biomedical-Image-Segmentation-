@@ -1,13 +1,16 @@
+import os
 import torch
 import torch.nn as nn
 import torch.optim as opt
 import torch.utils.data as ut
+import torchvision
 
-from src.tools.Tools import *
+from src.Tools.Tools import *
 
 import numpy as np
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
+from os import path
 from src.Data_processing.augment_data import *
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
@@ -236,11 +239,12 @@ def train(device, epochs, batch_size):
 
     for e in range(epochs):
         loss_stat = 0
+        print("Epoch: ",e," of ",epochs)
         for i in dataloader_train:
             train = i["data"]
             label = i["label"]
 
-            print(train.size())
+            #print(train.size())
 
             #reset gradients
             optimizer.zero_grad()
@@ -254,11 +258,29 @@ def train(device, epochs, batch_size):
             optimizer.step()
 
             loss_stat += loss.item()
-        print(loss_stat)
-        loss_stat = 0
+        #print(torch.cuda.memory_summary(device=None, abbreviated=False))
+        print("Loss: ", loss_stat)
+
+    #Evaluation
+    glob_path = os.path.dirname(os.path.realpath("src"))
+    p = os.path.join(glob_path,"saved_nets")
+
+    if not path.exists(p):
+        print("saved_nets not found, creating the directory")
+        try:
+            os.mkdir(p)
+        except OSError as exc:
+            raise
+    else:
+        print("saved_nets found")
+
+
+    torch.save(u_net.state_dict(), p+'/save.pt')
+
+
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, 2, 1)
+    train(main_device, 1, batch_size=1)
 
 
