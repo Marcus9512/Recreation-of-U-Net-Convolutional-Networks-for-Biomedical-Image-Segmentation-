@@ -209,7 +209,7 @@ def train(device, epochs, batch_size):
 
     #Load data
 
-    path_train = '../../data/'
+    path_train = 'data/'
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
     raw_test = create_data(path_train, 'test_v', frames)
