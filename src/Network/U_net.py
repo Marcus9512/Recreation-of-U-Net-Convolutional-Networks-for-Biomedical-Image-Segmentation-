@@ -6,10 +6,9 @@ import torch.utils.data as ut
 from src.tools.Tools import *
 
 import numpy as np
-import src.Data_processing.augment_data as ad
-
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
+from src.Data_processing.augment_data import *
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -211,9 +210,15 @@ def train(device, epochs, batch_size):
     #Load data
 
     path_train = 'data/'
-    raw_train = torch.from_numpy(create_data(path_train, 'train_v', frames))
-    raw_labels = torch.from_numpy(create_data(path_train, 'train_l', frames))
-    raw_test = torch.from_numpy(create_data(path_train, 'test_v', frames))
+    raw_train = create_data(path_train, 'train_v', frames)
+    raw_labels = create_data(path_train, 'train_l', frames)
+    raw_test = create_data(path_train, 'test_v', frames)
+
+    [X_deformed, Y_deformed] = augment(raw_train, raw_labels, 5)
+    np.append(raw_train, X_deformed)
+    np.append(raw_labels, Y_deformed)
+    raw_train = torch.from_numpy(raw_train)
+    raw_labels = torch.from_numpy(raw_labels)
 
     train, train_labels, val, val_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8)
 
@@ -222,9 +227,6 @@ def train(device, epochs, batch_size):
 
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True)
-
-    #augmented_data = ad.augment(train_volume[1])
-
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
