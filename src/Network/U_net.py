@@ -76,7 +76,7 @@ class U_NET(nn.Module):
         self.conv6 = Conv(256, 256)
 
         # U 4
-        self.conv7 = Conv(265, 512)
+        self.conv7 = Conv(256, 512)
         self.conv8 = Conv(512, 512)
 
         # U 5 Lowest layer
@@ -166,7 +166,7 @@ class Conv(nn.Module):
         '''
         self.module = nn.Sequential()
         self.module.add_module("conv",nn.Conv2d(channels_in, channels_out, 3, padding=1))
-        self.module.add_module("relu", nn.ReLU())
+        self.module.add_module("relu", nn.ReLU(inplace=True))
 
     def forward(self, x):
         res = self.module(x)
@@ -189,7 +189,7 @@ class Up_conv(nn.Module):
         '''
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
        # self.conv1 = Conv(channels_in, channels_out)
-        self.conv2 = nn.Conv2d(channels_in, channels_out, 2)
+        self.conv2 = nn.Conv2d(channels_in, channels_out, 1)
 
 
     def forward(self, x):
@@ -214,11 +214,13 @@ def train(device, epochs, batch_size):
     raw_labels = create_data(path_train, 'train_l', frames)
     raw_test = create_data(path_train, 'test_v', frames)
 
-    [X_deformed, Y_deformed] = augment(raw_train, raw_labels, 5)
-    np.append(raw_train, X_deformed)
-    np.append(raw_labels, Y_deformed)
+    #[X_deformed, Y_deformed] = augment(raw_train, raw_labels, 5)
+    #np.append(raw_train, X_deformed)
+    #np.append(raw_labels, Y_deformed)
+
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
+    raw_test = torch.from_numpy(raw_test)
 
     train, train_labels, val, val_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8)
 
@@ -244,14 +246,19 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
+
+            label = train.to(device=device, dtype=torch.long)
+            label = label.squeeze(1)
             loss = evaluation(out, label)
             loss.backward()
             optimizer.step()
 
             loss_stat += loss.item()
+        print(loss_stat)
+        loss_stat = 0
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, 2, 2)
+    train(main_device, 2, 1)
 
 
