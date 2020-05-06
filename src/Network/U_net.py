@@ -3,15 +3,12 @@ import torch
 import torch.nn as nn
 import torch.optim as opt
 import torch.utils.data as ut
-import torchvision
 
 from src.Tools.Tools import *
-
-import numpy as np
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
-from os import path
 from src.Data_processing.augment_data import *
+from os import path
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -245,33 +242,53 @@ def train(device, epochs, batch_size):
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True)
 
+    print(dataloader_train)
+
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
 
     for e in range(epochs):
-        loss_stat = 0
         print("Epoch: ",e," of ",epochs)
+        loss_training = 0
+
+        # Training
+        u_net.train()
         for i in dataloader_train:
             train = i["data"]
             label = i["label"]
-
-            #print(train.size())
 
             #reset gradients
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
 
-            label = train.to(device=device, dtype=torch.long)
+            label = label.to(device=device, dtype=torch.long)
             label = label.squeeze(1)
             loss = evaluation(out, label)
             loss.backward()
             optimizer.step()
 
-            loss_stat += loss.item()
-        #print(torch.cuda.memory_summary(device=None, abbreviated=False))
-        print("Loss: ", loss_stat)
+            loss_training += loss.item()
+
+        loss_val = 0
+
+        # Validation
+        u_net.eval()
+        for j in dataloader_val:
+            val = j["data"]
+            label_val = j["label"]
+            val = val.to(device=device, dtype=torch.float32)
+
+            with torch.no_grad():
+                out = u_net(val)
+                label_val = label_val.to(device=device, dtype=torch.long)
+                label_val = label_val.squeeze(1)
+                loss = evaluation(out, label_val)
+                loss_val += loss.item()
+
+        print("Training loss: ",loss_training)
+        print("Validation loss: ", loss_val)
 
     #Evaluation
     glob_path = os.path.dirname(os.path.realpath("src"))
@@ -286,13 +303,11 @@ def train(device, epochs, batch_size):
     else:
         print("saved_nets found")
 
-
+    print("Saving network")
     torch.save(u_net.state_dict(), p+'/save.pt')
-
-
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, 5, batch_size=1)
+    train(main_device, epochs=10, batch_size=1)
 
 
