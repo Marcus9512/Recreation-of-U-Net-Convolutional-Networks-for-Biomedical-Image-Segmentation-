@@ -293,6 +293,6 @@ def train(device, epochs, batch_size):
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, 1, batch_size=1)
+    train(main_device, 5, batch_size=1)
 
 
