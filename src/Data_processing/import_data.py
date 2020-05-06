@@ -40,8 +40,6 @@ if __name__ == "__main__":
     train_volume = create_data(path_train, 'train_v', 30)
     train_labels = create_data(path_train, 'train_l', 30)
     test_volume = create_data(path_train, 'test_v', 30)
-
-    #test(path_train)
     
     print(train_volume.shape)
     print(train_labels.shape)
