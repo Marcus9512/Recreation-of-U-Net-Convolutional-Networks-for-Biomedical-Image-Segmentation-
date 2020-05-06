@@ -25,7 +25,8 @@ def create_data(path, type, n_frames):
             for j in range(frame.shape[0]):
                 for k in range(frame.shape[1]):
                     frame[j,k] = img.getpixel((j, k)) / 255
-
+            frame = np.expand_dims(frame , 0)
+            frame[0] = 1
             all_imgs.append(frame)
 
         except EOFError:
@@ -35,16 +36,18 @@ def create_data(path, type, n_frames):
     return np.asarray(all_imgs)
 
 
-if __name__ == "__main__":
-    path_train = '../'
 
+
+if __name__ == "__main__":
+    path_train = 'data/'
     train_volume = create_data(path_train, 'train_v', 30)
     train_labels = create_data(path_train, 'train_l', 30)
     test_volume = create_data(path_train, 'test_v', 30)
 
-    print(train_volume)
-    print(train_labels)
-    print(test_volume)
+    
+    print(train_volume.shape)
+    print(train_labels.shape)
+    print(test_volume.shape)
 
     np.save('train_volume.npy', train_volume)
     np.save('train_labels.npy', train_labels)
