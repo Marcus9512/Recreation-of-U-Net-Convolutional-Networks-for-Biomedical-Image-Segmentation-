@@ -200,6 +200,18 @@ class Up_conv(nn.Module):
         #return self.conv2
         return self.conv2(self.up(x))
 
+class diceloss(torch.nn.Module):
+    def init(self):
+        super(diceloss, self).init()
+    def forward(self,pred, target):
+       smooth = 1.
+       iflat = pred.contiguous().view(-1)
+       tflat = target.contiguous().view(-1)
+       intersection = (iflat * tflat).sum()
+       A_sum = torch.sum(iflat * iflat)
+       B_sum = torch.sum(tflat * tflat)
+       return 1 - ((2. * intersection + smooth) / (A_sum + B_sum + smooth) )
+
 def train(device, epochs, batch_size):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
@@ -217,9 +229,9 @@ def train(device, epochs, batch_size):
     raw_labels = create_data(path_train, 'train_l', frames)
     raw_test = create_data(path_train, 'test_v', frames)
 
-    #[X_deformed, Y_deformed] = augment(raw_train, raw_labels, 5)
-    #np.append(raw_train, X_deformed)
-    #np.append(raw_labels, Y_deformed)
+    [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
+    np.append(raw_train, X_augmented)
+    np.append(raw_labels, Y_augmented)
 
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
