@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as opt
 import torch.utils.data as ut
 
-from src.tools.Tools import *
+from src.Tools.Tools import *
 
 import numpy as np
 from src.Data_processing.import_data import *
@@ -214,9 +214,9 @@ def train(device, epochs, batch_size):
     raw_labels = create_data(path_train, 'train_l', frames)
     raw_test = create_data(path_train, 'test_v', frames)
 
-    #[X_deformed, Y_deformed] = augment(raw_train, raw_labels, 5)
-    #np.append(raw_train, X_deformed)
-    #np.append(raw_labels, Y_deformed)
+    [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
+    np.append(raw_train, X_augmented)
+    np.append(raw_labels, Y_augmented)
 
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
