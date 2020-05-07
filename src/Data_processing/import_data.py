@@ -37,6 +37,7 @@ def create_data(path, type, n_frames):
 
     return np.asarray(all_imgs)
 
+
 def print_img(all_imgs):
     #if(all_imgs == torch.is_tensor):
     #    all_imgs = all_imgs.eval()
@@ -55,11 +56,13 @@ def print_img(all_imgs):
 
 
 
+
 if __name__ == "__main__":
     path_train = 'data/'
     train_volume = create_data(path_train, 'train_v', 30)
     train_labels = create_data(path_train, 'train_l', 30)
     test_volume = create_data(path_train, 'test_v', 30)
+
     #print_img(train_volume)
     #print_img(train_labels)
     #print_img(test_volume)

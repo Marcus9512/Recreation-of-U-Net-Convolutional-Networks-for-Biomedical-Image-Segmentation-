@@ -1,14 +1,16 @@
+import os
 import torch
+import torchvision
 import torch.nn as nn
 import torch.optim as opt
 import torch.utils.data as ut
+import torch.utils.tensorboard as tb
 
 from src.Tools.Tools import *
-
-import numpy as np
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
+from os import path
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -76,7 +78,7 @@ class U_NET(nn.Module):
         self.conv6 = Conv(256, 256)
 
         # U 4
-        self.conv7 = Conv(265, 512)
+        self.conv7 = Conv(256, 512)
         self.conv8 = Conv(512, 512)
 
         # U 5 Lowest layer
@@ -166,7 +168,7 @@ class Conv(nn.Module):
         '''
         self.module = nn.Sequential()
         self.module.add_module("conv",nn.Conv2d(channels_in, channels_out, 3, padding=1))
-        self.module.add_module("relu", nn.ReLU())
+        self.module.add_module("relu", nn.ReLU(inplace=True))
 
     def forward(self, x):
         res = self.module(x)
@@ -189,7 +191,7 @@ class Up_conv(nn.Module):
         '''
         self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
        # self.conv1 = Conv(channels_in, channels_out)
-        self.conv2 = nn.Conv2d(channels_in, channels_out, 2)
+        self.conv2 = nn.Conv2d(channels_in, channels_out, 1)
 
 
     def forward(self, x):
@@ -197,10 +199,24 @@ class Up_conv(nn.Module):
         #return self.conv2
         return self.conv2(self.up(x))
 
+class diceloss(torch.nn.Module):
+    def init(self):
+        super(diceloss, self).init()
+    def forward(self,pred, target):
+       smooth = 1.
+       iflat = pred.contiguous().view(-1)
+       tflat = target.contiguous().view(-1)
+       intersection = (iflat * tflat).sum()
+       A_sum = torch.sum(iflat * iflat)
+       B_sum = torch.sum(tflat * tflat)
+       return 1 - ((2. * intersection + smooth) / (A_sum + B_sum + smooth) )
+
 def train(device, epochs, batch_size):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
     https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
+
+    SummaryWriter https://pytorch.org/docs/stable/tensorboard.html
     '''
     u_net = U_NET()
     u_net.to(device)
@@ -214,11 +230,13 @@ def train(device, epochs, batch_size):
     raw_labels = create_data(path_train, 'train_l', frames)
     raw_test = create_data(path_train, 'test_v', frames)
 
-    [X_deformed, Y_deformed] = augment(raw_train, raw_labels, 5)
-    np.append(raw_train, X_deformed)
-    np.append(raw_labels, Y_deformed)
+    [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
+    np.append(raw_train, X_augmented)
+    np.append(raw_labels, Y_augmented)
+
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
+    raw_test = torch.from_numpy(raw_test)
 
     train, train_labels, val, val_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8)
 
@@ -228,30 +246,88 @@ def train(device, epochs, batch_size):
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True)
 
+    len_t = len(dataloader_train)
+    len_v = len(dataloader_val)
+
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
 
+    summary = tb.SummaryWriter()
+
     for e in range(epochs):
-        loss_stat = 0
+        print("Epoch: ",e," of ",epochs)
+        loss_training = 0
+
+        # Training
+        u_net.train()
+        pos = 0
         for i in dataloader_train:
             train = i["data"]
             label = i["label"]
-
-            print(train.size())
 
             #reset gradients
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
+            summary.add_image('training',torchvision.utils.make_grid(out), int(pos)+ e*len_t)
+
+            label = label.to(device=device, dtype=torch.long)
+            label = label.squeeze(1)
             loss = evaluation(out, label)
             loss.backward()
             optimizer.step()
 
-            loss_stat += loss.item()
+            loss_training += loss.item()
+            pos += 1
+
+        loss_val = 0
+
+        # Validation
+        u_net.eval()
+        pos = 0
+        for j in dataloader_val:
+            val = j["data"]
+            label_val = j["label"]
+            val = val.to(device=device, dtype=torch.float32)
+
+            with torch.no_grad():
+                out = u_net(val)
+                summary.add_image('val', torchvision.utils.make_grid(out) , int(pos) + e * len_v)
+
+                label_val = label_val.to(device=device, dtype=torch.long)
+                label_val = label_val.squeeze(1)
+                loss = evaluation(out, label_val)
+                loss_val += loss.item()
+                pos += 1
+
+        print("Training loss: ",loss_training)
+        print("Validation loss: ", loss_val)
+        summary.add_scalar('Loss/train', loss_training, e)
+        summary.add_scalar('Loss/val', loss_val, e)
+        # print(torch.cuda.memory_summary(device=None, abbreviated=False))
+
+    summary.flush()
+    summary.close()
+
+    #Evaluation
+    glob_path = os.path.dirname(os.path.realpath("src"))
+    p = os.path.join(glob_path,"saved_nets")
+
+    if not path.exists(p):
+        print("saved_nets not found, creating the directory")
+        try:
+            os.mkdir(p)
+        except OSError as exc:
+            raise
+    else:
+        print("saved_nets found")
+
+    print("Saving network")
+    torch.save(u_net.state_dict(), p+'/save.pt')
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, 2, 2)
+    train(main_device, epochs=10, batch_size=1)
 
 
