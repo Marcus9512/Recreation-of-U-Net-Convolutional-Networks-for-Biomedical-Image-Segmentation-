@@ -1,5 +1,7 @@
 import numpy as np
+from matplotlib import pyplot
 from PIL import Image
+
 
 def create_data(path, type, n_frames):
     """
@@ -35,12 +37,39 @@ def create_data(path, type, n_frames):
 
     return np.asarray(all_imgs)
 
+
+def print_img(all_imgs):
+    #if(all_imgs == torch.is_tensor):
+    #    all_imgs = all_imgs.eval()
+        
+        
+    #fig, ax = pyplot.subplots(2, 15)
+    for i in range(len(all_imgs)):
+        all_imgs[i] = (all_imgs[i] * 255).astype(np.uint8)
+        img = Image.fromarray(all_imgs[i])
+        #ax[i%2][i//2].imshow(img)
+        if(i % 10 == 0):
+            img.show()
+
+
+
+
+
+
+
 if __name__ == "__main__":
     path_train = 'data/'
     train_volume = create_data(path_train, 'train_v', 30)
     train_labels = create_data(path_train, 'train_l', 30)
     test_volume = create_data(path_train, 'test_v', 30)
-    
-    print(train_volume.shape)
-    print(train_labels.shape)
-    print(test_volume.shape)
+
+    #print_img(train_volume)
+    #print_img(train_labels)
+    #print_img(test_volume)
+    #print(train_volume.shape)
+    #print(train_labels.shape)
+    #print(test_volume.shape)
+
+    #np.save('train_volume.npy', train_volume)
+    #np.save('train_labels.npy', train_labels)
+    #np.save('test_volume.npy', test_volume)
