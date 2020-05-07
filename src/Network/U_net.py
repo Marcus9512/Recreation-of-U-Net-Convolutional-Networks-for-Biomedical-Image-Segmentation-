@@ -270,7 +270,7 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
-          
+
             summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e*len_t)
             summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
             summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
