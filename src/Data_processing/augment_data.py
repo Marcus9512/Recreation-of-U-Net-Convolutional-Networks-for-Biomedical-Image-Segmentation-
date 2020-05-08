@@ -22,6 +22,7 @@ def augment(X, Y, reps=1):
     Y_deformed = np.asarray(Y_deformed)
     X_deformed = np.expand_dims(X_deformed, 1)
     Y_deformed = np.expand_dims(Y_deformed, 1)
+
     return [X_deformed, Y_deformed]
 
     # imageio.imsave('test_X.png', X)
