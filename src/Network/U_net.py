@@ -244,17 +244,6 @@ def evaluate_model_no_label(device, u_net):
 
             pos += 1
 
-class diceloss(torch.nn.Module):
-    def init(self):
-        super(diceloss, self).init()
-    def forward(self, pred, target):
-       smooth = 1.
-       iflat = pred.contiguous().view(-1)
-       tflat = target.contiguous().view(-1)
-       intersection = (iflat * tflat).sum()
-       A_sum = torch.sum(iflat * iflat)
-       B_sum = torch.sum(tflat * tflat)
-       return 1 - ((2. * intersection + smooth) / (A_sum + B_sum + smooth) )
 
 def train(device, epochs, batch_size):
     '''
@@ -275,9 +264,13 @@ def train(device, epochs, batch_size):
 
 
     [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
-    np.append(raw_train, X_augmented)
-    np.append(raw_labels, Y_augmented)
+    print(X_augmented.shape)
+    print(Y_augmented.shape)
+    raw_train = np.append(raw_train, X_augmented,axis=1)
+    raw_labels = np.append(raw_labels, Y_augmented,axis=1)
 
+    print(raw_train.shape)
+    print(raw_labels.shape)
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
 
@@ -362,7 +355,7 @@ def train(device, epochs, batch_size):
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
 
-        scheduler.step()
+        scheduler.step(loss_val)
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
