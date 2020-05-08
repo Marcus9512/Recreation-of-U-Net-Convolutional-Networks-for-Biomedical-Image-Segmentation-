@@ -281,7 +281,6 @@ def train(device, epochs, batch_size):
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
 
-
     train, train_labels, val, val_labels, test, test_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8, 0.0)
 
     batch_train = Custom_dataset(train, train_labels)
