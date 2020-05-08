@@ -273,10 +273,9 @@ def train(device, epochs, batch_size):
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
 
-
     [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
-    np.append(raw_train, X_augmented)
-    np.append(raw_labels, Y_augmented)
+    raw_train = np.append(raw_train, X_augmented)
+    raw_labels = np.append(raw_labels, Y_augmented)
 
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
