@@ -13,7 +13,9 @@ def augment_and_crop(X, Y, reps=1):
     X_deformed = []
     Y_deformed = []
     border_pad = 20;
-    crop = (slice(0+border_pad, 512-border_pad), slice(0+border_pad, 512-border_pad))
+    img_len = 512
+
+    crop = (slice(0+border_pad, img_len-border_pad), slice(0+border_pad, img_len-border_pad))
     for i in range(len(X)):
         # apply deformation with a random 3 x 3 grid and standard dev=10 pixels
         imageio.imsave('images/in/test_X' + str(i) + ".png", X[i][0])
@@ -26,8 +28,8 @@ def augment_and_crop(X, Y, reps=1):
             Y_deformed += [y_ij]
             imageio.imsave('images/in/test_X'+str(i)+"_"+str(j) + ".png", x_ij)
             imageio.imsave('images/out/test_Y'+str(i)+"_"+str(j) + ".png", y_ij)
-    X = X[:, :, border_pad:512-border_pad, border_pad:512-border_pad]
-    Y = Y[:, :, border_pad:512-border_pad, border_pad:512-border_pad]
+    X = X[:, :, border_pad:img_len-border_pad, border_pad:img_len-border_pad]
+    Y = Y[:, :, border_pad:img_len-border_pad, border_pad:img_len-border_pad]
     X_deformed = np.asarray(X_deformed)
     Y_deformed = np.asarray(Y_deformed)
     X_deformed = np.expand_dims(X_deformed, 1)
