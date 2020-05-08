@@ -270,7 +270,10 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
-            summary.add_image('training',torchvision.utils.make_grid(out), int(pos)+ e*len_t)
+
+            summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e*len_t)
+            summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
+            summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
             label = label.to(device=device, dtype=torch.long)
             label = label.squeeze(1)
@@ -293,7 +296,9 @@ def train(device, epochs, batch_size):
 
             with torch.no_grad():
                 out = u_net(val)
-                summary.add_image('val', torchvision.utils.make_grid(out) , int(pos) + e * len_v)
+                summary.add_image('val_res', torchvision.utils.make_grid(out) , int(pos) + e * len_v)
+                summary.add_image('val_in', torchvision.utils.make_grid(val), int(pos) + e * len_v)
+                summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
 
                 label_val = label_val.to(device=device, dtype=torch.long)
                 label_val = label_val.squeeze(1)
@@ -328,6 +333,6 @@ def train(device, epochs, batch_size):
 
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, epochs=10, batch_size=1)
+    train(main_device, epochs=500, batch_size=1)
 
 

@@ -28,9 +28,11 @@ def create_data(path, type, n_frames):
             for j in range(frame.shape[0]):
                 for k in range(frame.shape[1]):
                     frame[j,k] = img.getpixel((j, k)) / 255
+
             frame = np.expand_dims(frame , 2)
             frame = frame.transpose((2, 0, 1))
-            frame[0] = 1
+
+    
             all_imgs.append(frame)
 
         except EOFError:
@@ -43,8 +45,8 @@ def create_data(path, type, n_frames):
 def print_img(all_imgs):
     #if(all_imgs == torch.is_tensor):
     #    all_imgs = all_imgs.eval()
-        
-        
+
+
     #fig, ax = pyplot.subplots(2, 15)
     for i in range(len(all_imgs)):
         all_imgs[i] = (all_imgs[i] * 255).astype(np.uint8)
@@ -53,18 +55,13 @@ def print_img(all_imgs):
         if(i % 10 == 0):
             img.show()
 
-
-
-
-
-
-
 if __name__ == "__main__":
     path_train = 'data/'
     train_volume = create_data(path_train, 'train_v', 30)
     print(train_volume[0][0])
     train_labels = create_data(path_train, 'train_l', 30)
     test_volume = create_data(path_train, 'test_v', 30)
+
 
 
 
