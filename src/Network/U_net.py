@@ -235,7 +235,7 @@ def evaluate_model_no_label(device, u_net):
     u_net.eval()
     for j in dataloader_val:
         test = j["data"]
-        test = test.to(device=device, dtype=torch.float32)
+        test = test.to(device=device, dtype=torch.long)
 
         with torch.no_grad():
             out = u_net(test)
@@ -296,6 +296,7 @@ def train(device, epochs, batch_size):
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.CrossEntropyLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
+    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
     summary = tb.SummaryWriter()
 
@@ -360,6 +361,8 @@ def train(device, epochs, batch_size):
         print("Validation loss: ", loss_val)
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
+
+        scheduler.step()
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
