@@ -107,7 +107,7 @@ class U_NET(nn.Module):
         self.up4 = Up_conv(128, 64)
 
         # 1x1 convulution
-        self.conv1x1 = nn.Conv2d(64, 2, kernel_size=1)
+        self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
         #torch.nn.init.normal_(self.conv1x1.weight, 0, np.sqrt(2 / 64))
 
     def forward(self, x):
@@ -191,7 +191,7 @@ class Up_conv(nn.Module):
         :return:
         '''
         self.up =  nn.ConvTranspose2d(channels_in , channels_in // 2, kernel_size=2, stride=2)
-        self.relu = nn.ReLU(inplace=True)
+        #self.relu = nn.ReLU(inplace=True)
 
         #self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         #self.conv = nn.Conv2d(channels_in, channels_out, 2)
@@ -199,7 +199,7 @@ class Up_conv(nn.Module):
 
     def forward(self, x):
         #self.conv2(self.up(x))
-        return self.relu(self.up(x))
+        return self.up(x)
 
 class diceloss(torch.nn.Module):
 
@@ -244,17 +244,6 @@ def evaluate_model_no_label(device, u_net):
 
             pos += 1
 
-class diceloss(torch.nn.Module):
-    def init(self):
-        super(diceloss, self).init()
-    def forward(self, pred, target):
-       smooth = 1.
-       iflat = pred.contiguous().view(-1)
-       tflat = target.contiguous().view(-1)
-       intersection = (iflat * tflat).sum()
-       A_sum = torch.sum(iflat * iflat)
-       B_sum = torch.sum(tflat * tflat)
-       return 1 - ((2. * intersection + smooth) / (A_sum + B_sum + smooth) )
 
 def train(device, epochs, batch_size):
     '''
@@ -289,7 +278,7 @@ def train(device, epochs, batch_size):
     len_v = len(dataloader_val)
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    evaluation = nn.CrossEntropyLoss()
+    evaluation = nn.BCEWithLogitsLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
     scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
@@ -312,14 +301,13 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
-            #out = torch.sign(out)
 
             summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
             summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
             summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
-            label = label.to(device=device, dtype=torch.long)
-            label = label.squeeze(0)
+            label = label.to(device=device, dtype=torch.float32)
+            #label = label.squeeze(0)
             loss = evaluation(out, label)
             loss.backward()
             optimizer.step()
@@ -344,8 +332,8 @@ def train(device, epochs, batch_size):
                 summary.add_image('val_in', torchvision.utils.make_grid(val), int(pos) + e * len_v)
                 summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
 
-                label_val = label_val.to(device=device, dtype=torch.long)
-                label_val = label_val.squeeze(0)
+                label_val = label_val.to(device=device, dtype=torch.float32)
+                #label_val = label_val.squeeze(0)
                 loss = evaluation(out, label_val)
                 loss_val += loss.item()
                 pos += 1
@@ -357,7 +345,7 @@ def train(device, epochs, batch_size):
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
 
-        scheduler.step()
+        scheduler.step(loss_val)
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
@@ -378,6 +366,7 @@ def train(device, epochs, batch_size):
 
     print("Saving network")
     torch.save(u_net.state_dict(), p+'/save.pt')
+    
 if __name__ == '__main__':
     main_device = init_main_device()
     train(main_device, epochs=500, batch_size=1)
