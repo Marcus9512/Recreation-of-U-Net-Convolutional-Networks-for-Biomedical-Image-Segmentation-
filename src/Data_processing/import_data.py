@@ -61,10 +61,3 @@ if __name__ == "__main__":
     print(train_volume[0][0])
     train_labels = create_data(path_train, 'train_l', 30)
     test_volume = create_data(path_train, 'test_v', 30)
-
-
-
-
-    #np.save('train_volume.npy', train_volume)
-    #np.save('train_labels.npy', train_labels)
-    #np.save('test_volume.npy', test_volume)

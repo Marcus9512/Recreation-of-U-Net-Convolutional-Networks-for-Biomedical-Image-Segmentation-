@@ -256,7 +256,6 @@ def train(device, epochs, batch_size):
     frames = 30 # aka length of dataset
 
     #Load data
-
     path_train = 'data/'
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
@@ -270,7 +269,7 @@ def train(device, epochs, batch_size):
     raw_labels = torch.from_numpy(raw_labels)
 
 
-    train, train_labels, val, val_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8)
+    train, train_labels, val, val_labels, test, test_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8, 0.0)
 
     batch_train = Custom_dataset(train, train_labels)
     batch_val = Custom_dataset(val, val_labels)
@@ -302,6 +301,7 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
+            out = torch.sign(out)
 
             summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
             summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
