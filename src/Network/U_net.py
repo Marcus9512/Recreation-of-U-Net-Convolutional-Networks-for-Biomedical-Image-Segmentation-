@@ -191,7 +191,7 @@ class Up_conv(nn.Module):
         :return:
         '''
         self.up =  nn.ConvTranspose2d(channels_in , channels_in // 2, kernel_size=2, stride=2)
-        self.relu = nn.ReLU(inplace=True)
+        #self.relu = nn.ReLU(inplace=True)
 
         #self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         #self.conv = nn.Conv2d(channels_in, channels_out, 2)
@@ -199,7 +199,7 @@ class Up_conv(nn.Module):
 
     def forward(self, x):
         #self.conv2(self.up(x))
-        return self.relu(self.up(x))
+        return self.up(x)
 
 class diceloss(torch.nn.Module):
 
@@ -376,6 +376,7 @@ def train(device, epochs, batch_size):
 
     print("Saving network")
     torch.save(u_net.state_dict(), p+'/save.pt')
+    
 if __name__ == '__main__':
     main_device = init_main_device()
     train(main_device, epochs=500, batch_size=1)
