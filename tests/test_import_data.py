@@ -12,8 +12,8 @@ def test_import_data():
     path_train = "data/"
 
     res = create_data(path_train, 'train_v', 30)
-    assert res.shape == (30, 512, 512)
+    assert res.shape == (30, 1, 512, 512)
     res = create_data(path_train, 'train_l', 30)
-    assert res.shape == (30, 512, 512)
+    assert res.shape == (30, 1, 512, 512)
     res = create_data(path_train, 'test_v', 30)
-    assert res.shape == (30, 512, 512)
+    assert res.shape == (30, 1, 512, 512)

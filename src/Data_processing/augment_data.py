@@ -13,8 +13,8 @@ def augment(X, Y, reps=1):
 
     for i in range(len(X)):
         # apply deformation with a random 3 x 3 grid and standard dev=10 pixels
-        imageio.imsave('images/in/test_X' + str(i) + ".png", X[i][0])
-        imageio.imsave('images/out/test_Y' + str(i) + ".png", Y[i][0])
+        #imageio.imsave('images/in/test_X' + str(i) + ".png", X[i][0])
+        #imageio.imsave('images/out/test_Y' + str(i) + ".png", Y[i][0])
         for j in range(reps):
             [x_ij, y_ij] = elasticdeform.deform_random_grid([X[i][0], Y[i][0]], sigma=10, points=3)
             x_ij = x_ij.clip(0,1) #restore default black and white color
