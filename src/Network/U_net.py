@@ -206,7 +206,7 @@ class diceloss(torch.nn.Module):
     def init(self):
         super(diceloss, self).init()
 
-    def forward(self,pred, target):
+    def forward(self, pred, target):
        smooth = 1.
        iflat = pred.contiguous().view(-1)
        tflat = target.contiguous().view(-1)
@@ -272,10 +272,7 @@ def train(device, epochs, batch_size):
     path_train = 'data/'
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
-
-    [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
-    raw_train = np.append(raw_train, X_augmented)
-    raw_labels = np.append(raw_labels, Y_augmented)
+    raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
 
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
