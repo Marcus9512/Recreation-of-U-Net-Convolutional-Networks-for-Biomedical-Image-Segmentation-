@@ -107,7 +107,7 @@ class U_NET(nn.Module):
         self.up4 = Up_conv(128, 64)
 
         # 1x1 convulution
-        self.conv1x1 = nn.Conv2d(64, 2, kernel_size=1)
+        self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
         #torch.nn.init.normal_(self.conv1x1.weight, 0, np.sqrt(2 / 64))
 
     def forward(self, x):
@@ -284,7 +284,7 @@ def train(device, epochs, batch_size):
     len_v = len(dataloader_val)
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    evaluation = nn.CrossEntropyLoss()
+    evaluation = nn.BCEWithLogitsLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
     scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
@@ -307,14 +307,13 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
-            #out = torch.sign(out)
 
             summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
             summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
             summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
-            label = label.to(device=device, dtype=torch.long)
-            label = label.squeeze(0)
+            label = label.to(device=device, dtype=torch.float32)
+            #label = label.squeeze(0)
             loss = evaluation(out, label)
             loss.backward()
             optimizer.step()
@@ -339,8 +338,8 @@ def train(device, epochs, batch_size):
                 summary.add_image('val_in', torchvision.utils.make_grid(val), int(pos) + e * len_v)
                 summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
 
-                label_val = label_val.to(device=device, dtype=torch.long)
-                label_val = label_val.squeeze(0)
+                label_val = label_val.to(device=device, dtype=torch.float32)
+                #label_val = label_val.squeeze(0)
                 loss = evaluation(out, label_val)
                 loss_val += loss.item()
                 pos += 1
