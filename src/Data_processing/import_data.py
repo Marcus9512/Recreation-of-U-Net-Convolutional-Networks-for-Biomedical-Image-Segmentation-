@@ -31,7 +31,6 @@ def create_data(path, type, n_frames):
 
             frame = np.expand_dims(frame , 2)
             frame = frame.transpose((2, 0, 1))
-
     
             all_imgs.append(frame)
 
