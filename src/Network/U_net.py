@@ -11,6 +11,7 @@ from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
 from os import path
+from torch.autograd import Function
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -167,7 +168,7 @@ class Conv(nn.Module):
         '''
         self.module = nn.Sequential()
         conv = nn.Conv2d(channels_in, channels_out, 3, padding=1)
-        #torch.nn.init.normal_(conv.weight, 0, np.sqrt(2/(9 * channels_in)))
+        torch.nn.init.normal_(conv.weight, 0, np.sqrt(2/(9 * channels_in)))
         self.module.add_module("conv",conv)
         self.module.add_module("relu", nn.ReLU(inplace=True))
 
@@ -200,20 +201,7 @@ class Up_conv(nn.Module):
     def forward(self, x):
         #self.conv2(self.up(x))
         return self.up(x)
-
-class diceloss(torch.nn.Module):
-
-    def init(self):
-        super(diceloss, self).init()
-
-    def forward(self, pred, target):
-       smooth = 1.
-       iflat = pred.contiguous().view(-1)
-       tflat = target.contiguous().view(-1)
-       intersection = (iflat * tflat).sum()
-       A_sum = torch.sum(iflat * iflat)
-       B_sum = torch.sum(tflat * tflat)
-       return 1 - ((2. * intersection + smooth) / (A_sum + B_sum + smooth))
+      
 
 def load_net(device):
     glob_path = os.path.dirname(os.path.realpath("src"))
@@ -245,6 +233,33 @@ def evaluate_model_no_label(device, u_net):
             pos += 1
 
 
+class diceloss(nn.Module):
+    def init(self):
+        super(diceloss, self).init()
+
+    def forward(self, prediction, target):
+        # saving for backwards:
+        self.prediction = prediction
+        self.target = target
+
+        # diceloss:
+        smooth = 1.
+        iflat = prediction.view(-1)
+        tflat = target.view(-1)
+        self.intersection = (iflat * tflat).sum()
+        self.sum = torch.sum(iflat * iflat) + torch.sum(tflat * tflat)
+        return 1 - ((2. * self.intersection + smooth) / (self.sum + smooth))
+
+    def backward(self, grad_out):
+        gt = self.target / self.sum
+        inter_over_sum = self.intersection / (self.sum * self.sum)
+        pred = self.prediction[:, 1] * inter_over_sum
+        dD = gt * 2 + self.prediction * -4
+
+        grad_in = torch.cat((dD*-grad_output[0], dD * grad_output[0]), 0)
+        return grad_in, None
+
+
 def train(device, epochs, batch_size):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
@@ -261,10 +276,12 @@ def train(device, epochs, batch_size):
     path_train = 'data/'
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
-    raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
 
+    raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
+    
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
+
 
     train, train_labels, val, val_labels, test, test_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8, 0.0)
 
@@ -278,7 +295,7 @@ def train(device, epochs, batch_size):
     len_v = len(dataloader_val)
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    evaluation = nn.BCEWithLogitsLoss()
+    evaluation = diceloss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
     scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
 
@@ -301,13 +318,14 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
+            #out = torch.sign(out)
 
             summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
             summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
             summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
             label = label.to(device=device, dtype=torch.float32)
-            #label = label.squeeze(0)
+
             loss = evaluation(out, label)
             loss.backward()
             optimizer.step()
@@ -333,8 +351,8 @@ def train(device, epochs, batch_size):
                 summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
 
                 label_val = label_val.to(device=device, dtype=torch.float32)
-                #label_val = label_val.squeeze(0)
-                loss = evaluation(out, label_val)
+
+                loss = evaluation(out, label)
                 loss_val += loss.item()
                 pos += 1
 
@@ -366,7 +384,6 @@ def train(device, epochs, batch_size):
 
     print("Saving network")
     torch.save(u_net.state_dict(), p+'/save.pt')
-    
 if __name__ == '__main__':
     main_device = init_main_device()
     train(main_device, epochs=500, batch_size=1)
