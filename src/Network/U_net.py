@@ -168,7 +168,7 @@ class Conv(nn.Module):
         '''
         self.module = nn.Sequential()
         conv = nn.Conv2d(channels_in, channels_out, 3, padding=1)
-        #torch.nn.init.normal_(conv.weight, 0, np.sqrt(2/(9 * channels_in)))
+        torch.nn.init.normal_(conv.weight, 0, np.sqrt(2/(9 * channels_in)))
         self.module.add_module("conv",conv)
         self.module.add_module("relu", nn.ReLU(inplace=True))
 
@@ -192,7 +192,7 @@ class Up_conv(nn.Module):
         :return:
         '''
         self.up =  nn.ConvTranspose2d(channels_in , channels_in // 2, kernel_size=2, stride=2)
-        self.relu = nn.ReLU(inplace=True)
+        #self.relu = nn.ReLU(inplace=True)
 
         #self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         #self.conv = nn.Conv2d(channels_in, channels_out, 2)
@@ -200,7 +200,8 @@ class Up_conv(nn.Module):
 
     def forward(self, x):
         #self.conv2(self.up(x))
-        return self.relu(self.up(x))
+        return self.up(x)
+      
 
 def load_net(device):
     glob_path = os.path.dirname(os.path.realpath("src"))
@@ -276,11 +277,8 @@ def train(device, epochs, batch_size):
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
 
-
-    [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
-    np.append(raw_train, X_augmented)
-    np.append(raw_labels, Y_augmented)
-
+    raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
+    
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
 
