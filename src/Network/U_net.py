@@ -52,14 +52,14 @@ def check_gpu_card():
 
 class U_NET(nn.Module):
 
-    def __init__(self):
+    def __init__(self, dropout_prob):
         '''
         setup
         '''
         super(U_NET, self).__init__()
-        self.set_up_network()
+        self.set_up_network(dropout_prob)
 
-    def set_up_network(self):
+    def set_up_network(self, dropout_prob):
         '''
         setup the convolutional net
         :return:
@@ -106,6 +106,8 @@ class U_NET(nn.Module):
         self.up3 = Up_conv(256, 128)
         self.up4 = Up_conv(128, 64)
 
+        self.dropout = nn.Dropout(dropout_prob)
+
         # 1x1 convulution
         self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
         #torch.nn.init.normal_(self.conv1x1.weight, 0, np.sqrt(2 / 64))
@@ -114,22 +116,27 @@ class U_NET(nn.Module):
         # U1
         x1 = self.conv1(x)
         x1 = self.conv2(x1)
+        #x1 = self.dropout(x1)
 
         #U2
         x2 = self.conv3(self.pool1(x1))
         x2 = self.conv4(x2)
+        #x2 = self.dropout(x2)
 
         # U3
         x3 = self.conv5(self.pool1(x2))
         x3 = self.conv6(x3)
+        #x3 = self.dropout(x3)
 
         # U4
         x4 = self.conv7(self.pool1(x3))
         x4 = self.conv8(x4)
+        #x4 = self.dropout(x4)
 
         # U5 lowest
         x5 = self.conv9(self.pool1(x4))
         x5 = self.conv10(x5)
+        x5 = self.dropout(x5)
 
         #Implement up-pass
 
@@ -166,8 +173,8 @@ class Conv(nn.Module):
         :return:
         '''
         self.module = nn.Sequential()
-        conv = nn.Conv2d(channels_in, channels_out, 3, padding=1)
-        #torch.nn.init.normal_(conv.weight, 0, np.sqrt(2/(9 * channels_in)))
+        conv = nn.Conv2d(channels_in, channels_out, 3, padding=1, bias=True)
+        torch.nn.init.normal_(conv.weight, 0, np.sqrt(2/(9 * channels_in)))
         self.module.add_module("conv",conv)
         self.module.add_module("relu", nn.ReLU(inplace=True))
 
@@ -190,7 +197,7 @@ class Up_conv(nn.Module):
         setup the convolutional net
         :return:
         '''
-        self.up =  nn.ConvTranspose2d(channels_in , channels_in // 2, kernel_size=2, stride=2)
+        self.up =  nn.ConvTranspose2d(channels_in , channels_out, kernel_size=2, stride=2)
         #self.relu = nn.ReLU(inplace=True)
 
         #self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
@@ -252,7 +259,7 @@ def train(device, epochs, batch_size):
 
     SummaryWriter https://pytorch.org/docs/stable/tensorboard.html
     '''
-    u_net = U_NET()
+    u_net = U_NET(0.1)
     u_net.to(device)
 
     frames = 30 # aka length of dataset
@@ -262,7 +269,7 @@ def train(device, epochs, batch_size):
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
 
-    [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 5)
+    [X_augmented, Y_augmented] = augment(raw_train, raw_labels, 50)
     print(X_augmented.shape)
     print(Y_augmented.shape)
     raw_train = np.append(raw_train, X_augmented,axis=0)
@@ -286,7 +293,7 @@ def train(device, epochs, batch_size):
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     evaluation = nn.BCEWithLogitsLoss()
     optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
-    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'min')
+    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max')
 
     summary = tb.SummaryWriter()
 
@@ -308,11 +315,13 @@ def train(device, epochs, batch_size):
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
 
-            summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
-            summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
-            summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
+            if pos == len_t-2:
+                summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
+                summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
+                summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
             label = label.to(device=device, dtype=torch.float32)
+
             #label = label.squeeze(0)
             loss = evaluation(out, label)
             loss.backward()
@@ -334,9 +343,10 @@ def train(device, epochs, batch_size):
 
             with torch.no_grad():
                 out = u_net(val)
-                summary.add_image('val_res', torchvision.utils.make_grid(out) , int(pos) + e * len_v)
-                summary.add_image('val_in', torchvision.utils.make_grid(val), int(pos) + e * len_v)
-                summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
+                if pos == len_v - 2:
+                    summary.add_image('val_res', torchvision.utils.make_grid(out) , int(pos) + e * len_v)
+                    summary.add_image('val_in', torchvision.utils.make_grid(val), int(pos) + e * len_v)
+                    summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
 
                 label_val = label_val.to(device=device, dtype=torch.float32)
                 #label_val = label_val.squeeze(0)
@@ -352,6 +362,10 @@ def train(device, epochs, batch_size):
         summary.add_scalar('Loss/val', loss_val, e)
 
         scheduler.step(loss_val)
+
+        glob_path = os.path.dirname(os.path.realpath("src"))
+        p = os.path.join(glob_path, "saved_nets")
+        torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
@@ -375,6 +389,6 @@ def train(device, epochs, batch_size):
     
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, epochs=500, batch_size=1)
+    train(main_device, epochs=100, batch_size=1)
 
 
