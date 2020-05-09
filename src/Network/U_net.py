@@ -246,6 +246,7 @@ class diceloss(nn.Module):
         super(diceloss, self).init()
 
     def forward(self, prediction, target):
+
         # saving for backwards:
         self.prediction = prediction
         self.target = target
@@ -262,7 +263,7 @@ class diceloss(nn.Module):
         gt = self.target / self.sum
         inter_over_sum = self.intersection / (self.sum * self.sum)
         pred = self.prediction[:, 1] * inter_over_sum
-        dD = gt * 2 + self.prediction * -4
+        dD = gt * 2 + pred * -4
 
         grad_in = torch.cat((dD*-grad_out[0], dD * grad_out[0]), 0)
         return grad_in, None
@@ -285,7 +286,7 @@ def train(device, epochs, batch_size):
     raw_train = create_data(path_train, 'train_v', frames)
     raw_labels = create_data(path_train, 'train_l', frames)
 
-    raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
+    #raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
     
     raw_train = torch.from_numpy(raw_train)
     raw_labels = torch.from_numpy(raw_labels)
@@ -326,6 +327,9 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
+            #out = torch.sigmoid(out)
+            #out = (out > 0.5).float()
+
             #out = torch.sign(out)
 
             if pos == len_t-2:
@@ -364,7 +368,7 @@ def train(device, epochs, batch_size):
 
                 label_val = label_val.to(device=device, dtype=torch.float32)
 
-                loss = evaluation(out, label)
+                loss = evaluation(out, label_val)
                 loss_val += loss.item()
                 pos += 1
 
@@ -400,7 +404,7 @@ def train(device, epochs, batch_size):
 
     print("Saving network")
     torch.save(u_net.state_dict(), p+'/save.pt')
-    
+
 if __name__ == '__main__':
     main_device = init_main_device()
     train(main_device, epochs=100, batch_size=1)
