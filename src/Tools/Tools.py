@@ -37,9 +37,9 @@ def rand_error(prediction, target):
     true_negative = 0
     n = len(iflat)
     for i in range(n):
-        if iflat[i] == 1 and iflat[i] == tflat[i]:
+        if iflat[i] == 1 and tflat[i] == 1:
             true_positive += 1
-        elif iflat[i] == 0 and iflat[i] == tflat[i]:
+        elif iflat[i] == 0 and tflat[i] == 0:
             true_negative += 1
     return 1 - (true_positive+true_negative) / (n*(n-1)/2)
 
