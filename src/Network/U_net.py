@@ -11,7 +11,7 @@ from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
 from os import path
-import src.Network.U_net2 as u2
+# import src.Network.U_net2 as u2
 from torch.autograd import Function
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
@@ -310,7 +310,10 @@ def train(device, epochs, batch_size):
 
 
     batch_train = Custom_dataset()
-    batch_train, batch_val = random_split(batch_train, [25, 5])
+
+    augment()
+
+    batch_train, batch_val = random_split(batch_train, [150, 30])
 
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=False, pin_memory=True)
