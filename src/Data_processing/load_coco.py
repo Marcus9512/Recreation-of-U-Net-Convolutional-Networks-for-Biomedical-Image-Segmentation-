@@ -10,7 +10,8 @@ import matplotlib.image as mpimg
 # http://cocodataset.org/#detection-2017
 # depending on which task you want to perform.
 
-# these paths need to work better:
+
+# these paths need to be changed according to your data placements:
 def get_coco(path_train_data="", path_train_json="", 
              path_val_data="", path_val_json="", 
              path_test_data="", path_test_json="", test=False):
