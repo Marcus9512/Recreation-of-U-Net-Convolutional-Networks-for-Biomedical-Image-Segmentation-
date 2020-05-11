@@ -11,8 +11,9 @@ from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
 from os import path
-# import src.Network.U_net2 as u2
+
 from torch.autograd import Function
+
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -114,7 +115,7 @@ class U_NET(nn.Module):
 
         # 1x1 convulution
         self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
-        #self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
         #self.softmax = nn.Softmax()
         #torch.nn.init.normal_(self.conv1x1.weight, 0, np.sqrt(2 / 64))
 
@@ -142,7 +143,7 @@ class U_NET(nn.Module):
         # U5 lowest
         x5 = self.conv9(self.pool1(x4))
         x5 = self.conv10(x5)
-        x5 = self.dropout3(x5)
+        #x5 = self.dropout3(x5)
 
         #Implement up-pass
 
@@ -166,7 +167,7 @@ class U_NET(nn.Module):
         x9 = self.conv2(x9)
         #x9 = self.dropout(x9)
 
-        return self.conv1x1(x9)
+        return self.sigmoid(self.conv1x1(x9))
 
 class Conv(nn.Module):
 
@@ -308,7 +309,6 @@ def train(device, epochs, batch_size):
     u_net = U_NET(0.1)
     u_net.to(device)
 
-
     batch_train = Custom_dataset()
 
     augment()
@@ -325,8 +325,8 @@ def train(device, epochs, batch_size):
     evaluation = nn.BCEWithLogitsLoss()
     diceloss_eval = diceloss()
 
-    optimizer = opt.SGD(u_net.parameters(), lr=0.001,weight_decay=1e-8, momentum=0.9)
-    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
+    optimizer = opt.SGD(u_net.parameters(), lr=0.001,weight_decay=1e-8, momentum=0.99)
+    #scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
 
     summary = tb.SummaryWriter()
 
@@ -373,7 +373,6 @@ def train(device, epochs, batch_size):
 
             label = label.to(device=device, dtype=torch.float32)
 
-            #label = label.squeeze(0)
 
             loss = evaluation(out, label)
             loss.backward()
@@ -417,9 +416,9 @@ def train(device, epochs, batch_size):
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
 
-        scheduler.step(loss_val)
-
-        torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
+        #scheduler.step(loss_val)
+        if epochs % 5 == 0:
+            torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
