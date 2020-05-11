@@ -112,7 +112,7 @@ class U_NET(nn.Module):
 
         # 1x1 convulution
         self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
-        #self.sigmoid = nn.Sigmoid()
+        self.sigmoid = nn.Sigmoid()
         #self.softmax = nn.Softmax()
         #torch.nn.init.normal_(self.conv1x1.weight, 0, np.sqrt(2 / 64))
 
@@ -164,7 +164,7 @@ class U_NET(nn.Module):
         x9 = self.conv2(x9)
         #x9 = self.dropout(x9)
 
-        return self.conv1x1(x9)
+        return self.sigmoid(self.conv1x1(x9))
 
 class Conv(nn.Module):
 
