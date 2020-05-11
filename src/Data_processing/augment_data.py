@@ -34,9 +34,8 @@ def augment_and_crop(X, Y, reps=1):
     Y_deformed = np.asarray(Y_deformed)
     X_deformed = np.expand_dims(X_deformed, 1)
     Y_deformed = np.expand_dims(Y_deformed, 1)
-    X = np.append(X, X_deformed, axis=0)
-    Y = np.append(Y, Y_deformed, axis=0)
-    return X, Y
+
+    return [X_deformed, Y_deformed]
 
 
 def augment(X, Y, reps=1):

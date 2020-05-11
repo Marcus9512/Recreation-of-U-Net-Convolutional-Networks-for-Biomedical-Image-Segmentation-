@@ -11,6 +11,7 @@ from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
 from os import path
+import src.Network.U_net2 as u2
 from torch.autograd import Function
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
@@ -67,7 +68,7 @@ class U_NET(nn.Module):
         '''
 
         # U 1
-        self.conv1 = Conv(1, 64)
+        self.conv1 = Conv(3, 64)
         self.conv2 = Conv(64, 64)
 
         # U 2
@@ -99,7 +100,7 @@ class U_NET(nn.Module):
         self.conv14 = Conv(128, 64)
 
         # poolings
-        self.pool1 = nn.MaxPool2d(2)
+        self.pool1 = nn.MaxPool2d(2, stride=2)
 
         # upsampling
         self.up1 = Up_conv(1024, 512)
@@ -108,9 +109,13 @@ class U_NET(nn.Module):
         self.up4 = Up_conv(128, 64)
 
         self.dropout = nn.Dropout(dropout_prob)
+        self.dropout2 = nn.Dropout(2*dropout_prob)
+        self.dropout3 = nn.Dropout(5*dropout_prob)
 
         # 1x1 convulution
         self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
+        #self.sigmoid = nn.Sigmoid()
+        #self.softmax = nn.Softmax()
         #torch.nn.init.normal_(self.conv1x1.weight, 0, np.sqrt(2 / 64))
 
     def forward(self, x):
@@ -127,35 +132,39 @@ class U_NET(nn.Module):
         # U3
         x3 = self.conv5(self.pool1(x2))
         x3 = self.conv6(x3)
-        #x3 = self.dropout(x3)
+        #x3 = self.dropout2(x3)
 
         # U4
         x4 = self.conv7(self.pool1(x3))
         x4 = self.conv8(x4)
-        #x4 = self.dropout(x4)
+        #x4 = self.dropout2(x4)
 
         # U5 lowest
         x5 = self.conv9(self.pool1(x4))
         x5 = self.conv10(x5)
-        x5 = self.dropout(x5)
+        x5 = self.dropout3(x5)
 
         #Implement up-pass
 
         # U6
-        x6 = self.conv11(torch.cat([x4, self.up1(x5)], dim=1))
+        x6 = self.conv11(torch.cat([self.up1(x5), x4], dim=1))
         x6 = self.conv8(x6)
+        #x6 = self.dropout2(x6)
 
         # U7
-        x7 = self.conv12(torch.cat([x3, self.up2(x6)], dim=1))
+        x7 = self.conv12(torch.cat([ self.up2(x6), x3], dim=1))
         x7 = self.conv6(x7)
+        #x7 = self.dropout2(x7)
 
         # U8
-        x8 = self.conv13(torch.cat([x2, self.up3(x7)], dim=1))
+        x8 = self.conv13(torch.cat([self.up3(x7),x2], dim=1))
         x8 = self.conv4(x8)
+        #x8 = self.dropout(x8)
 
         # U9
-        x9 = self.conv14(torch.cat([x1, self.up4(x8)], dim=1))
+        x9 = self.conv14(torch.cat([ self.up4(x8), x1], dim=1))
         x9 = self.conv2(x9)
+        #x9 = self.dropout(x9)
 
         return self.conv1x1(x9)
 
@@ -174,9 +183,10 @@ class Conv(nn.Module):
         :return:
         '''
         self.module = nn.Sequential()
-        conv = nn.Conv2d(channels_in, channels_out, 3, padding=1, bias=True)
-
+        conv = nn.Conv2d(channels_in, channels_out, 3, padding=1)
         torch.nn.init.normal_(conv.weight, 0, np.sqrt(2/(9 * channels_in)))
+        #torch.nn.init.xavier_normal_(conv.weight)
+
         self.module.add_module("conv",conv)
         self.module.add_module("relu", nn.ReLU(inplace=True))
 
@@ -200,7 +210,7 @@ class Up_conv(nn.Module):
         :return:
         '''
         self.up =  nn.ConvTranspose2d(channels_in , channels_out, kernel_size=2, stride=2)
-        #self.relu = nn.ReLU(inplace=True)
+        self.relu = nn.ReLU(inplace=True)
 
         #self.up = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         #self.conv = nn.Conv2d(channels_in, channels_out, 2)
@@ -208,6 +218,7 @@ class Up_conv(nn.Module):
 
     def forward(self, x):
         #self.conv2(self.up(x))
+
         return self.up(x)
       
 
@@ -215,30 +226,7 @@ def load_net(device):
     glob_path = os.path.dirname(os.path.realpath("src"))
     p = os.path.join(glob_path, "saved_nets")
     model = torch.load(p)
-    evaluate_model_no_label(device, model)
-
-def evaluate_model_no_label(device, u_net):
-    frames = 30
-    raw_test = create_data(path_train, 'test_v', frames)
-    raw_test = torch.from_numpy(raw_test)
-
-    batch_test = Custom_dataset(raw_test, None)
-
-    dataloader_val = ut.DataLoader(batch_test, batch_size=1, shuffle=True)
-    summary = tb.SummaryWriter()
-
-    pos = 0
-    u_net.eval()
-    for j in dataloader_val:
-        test = j["data"]
-        test = test.to(device=device, dtype=torch.long)
-
-        with torch.no_grad():
-            out = u_net(test)
-            summary.add_image('test_res', torchvision.utils.make_grid(out), int(pos))
-            summary.add_image('test_in', torchvision.utils.make_grid(test), int(pos))
-
-            pos += 1
+    #evaluate_model_no_label(device, model)
 
 
 class diceloss(nn.Module):
@@ -267,8 +255,49 @@ class diceloss(nn.Module):
 
         grad_in = torch.cat((dD*-grad_out[0], dD * grad_out[0]), 0)
         return grad_in, None
+'''
+def load_data():
+    frames = 30  # aka length of dataset
+
+    path_train = 'data/'
+    raw_train = create_data(path_train, 'train_v', frames)
+    raw_labels = create_data(path_train, 'train_l', frames)
+
+    #np.asarray(all_imgs)
+
+    [X_deformed, Y_deformed] = augment_and_crop(raw_train, raw_labels, 5)
+    raw_train = np.append(raw_train, X_deformed, axis=0)
+    raw_labels = np.append(raw_labels, Y_deformed, axis=0)
+
+    raw_train = torch.from_numpy(raw_train)
+    raw_labels = torch.from_numpy(raw_labels)
+
+    def resize(imgs):
+        img2 = img.resize((256, 256))
+        frame = np.zeros((img2.width, img2.height))
+
+'''
+'''
+   OLD CODE GRAVE
+   
+   #frames = 30 # aka length of dataset
+
+    #Load data
+    #path_train = 'data/'
+    #raw_train = create_data(path_train, 'train_v', frames)
+    #raw_labels = create_data(path_train, 'train_l', frames)
+
+    #raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
+    #[X_deformed, Y_deformed] = augment(raw_train, raw_labels, 10)
+    #raw_train = np.append(raw_train, X_deformed, axis=0)
+    #raw_labels = np.append(raw_labels, Y_deformed, axis=0)
+    
+    #raw_train = torch.from_numpy(raw_train)
+    #raw_labels = torch.from_numpy(raw_labels)
 
 
+    #train, train_labels, val, val_labels, test, test_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8, 0.0)
+'''
 def train(device, epochs, batch_size):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
@@ -279,38 +308,41 @@ def train(device, epochs, batch_size):
     u_net = U_NET(0.1)
     u_net.to(device)
 
-    frames = 30 # aka length of dataset
 
-    #Load data
-    path_train = 'data/'
-    raw_train = create_data(path_train, 'train_v', frames)
-    raw_labels = create_data(path_train, 'train_l', frames)
+    batch_train = Custom_dataset()
+    batch_train, batch_val = random_split(batch_train, [25, 5])
 
-    #raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
-    
-    raw_train = torch.from_numpy(raw_train)
-    raw_labels = torch.from_numpy(raw_labels)
-
-
-    train, train_labels, val, val_labels, test, test_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8, 0.0)
-
-    batch_train = Custom_dataset(train, train_labels)
-    batch_val = Custom_dataset(val, val_labels)
-
-    dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True)
-    dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True)
+    dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
+    dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=False, pin_memory=True)
 
     len_t = len(dataloader_train)
     len_v = len(dataloader_val)
 
     #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    evaluation = diceloss()
-    optimizer = opt.SGD(u_net.parameters(), lr=0.001, momentum=0.99)
-    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max')
+    evaluation = nn.BCEWithLogitsLoss()
+    diceloss_eval = diceloss()
+
+    optimizer = opt.SGD(u_net.parameters(), lr=0.001,weight_decay=1e-8, momentum=0.9)
+    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
 
     summary = tb.SummaryWriter()
 
     print(len_t, len_v)
+
+    # Code for saving network
+    glob_path = os.path.dirname(os.path.realpath("src"))
+    p = os.path.join(glob_path,"saved_nets")
+
+    if not path.exists(p):
+        print("saved_nets not found, creating the directory")
+        try:
+            os.mkdir(p)
+        except OSError as exc:
+            raise
+    else:
+        print("saved_nets found")
+
+    #Training loop
 
     for e in range(epochs):
         print("Epoch: ",e," of ",epochs)
@@ -327,8 +359,7 @@ def train(device, epochs, batch_size):
             optimizer.zero_grad()
             train = train.to(device=device, dtype=torch.float32)
             out = u_net(train)
-            #out = torch.sigmoid(out)
-            #out = (out > 0.5).float()
+            #print(out)
 
             #out = torch.sign(out)
 
@@ -368,6 +399,9 @@ def train(device, epochs, batch_size):
 
                 label_val = label_val.to(device=device, dtype=torch.float32)
 
+                #out = torch.sigmoid(out)
+                #out = (out > 0.5).float()
+
                 loss = evaluation(out, label_val)
                 loss_val += loss.item()
                 pos += 1
@@ -376,37 +410,29 @@ def train(device, epochs, batch_size):
 
         print("Training loss: ",loss_training)
         print("Validation loss: ", loss_val)
+
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
 
         scheduler.step(loss_val)
 
-        glob_path = os.path.dirname(os.path.realpath("src"))
-        p = os.path.join(glob_path, "saved_nets")
         torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
     summary.close()
 
-    #Evaluation
-    glob_path = os.path.dirname(os.path.realpath("src"))
-    p = os.path.join(glob_path,"saved_nets")
-
-    if not path.exists(p):
-        print("saved_nets not found, creating the directory")
-        try:
-            os.mkdir(p)
-        except OSError as exc:
-            raise
-    else:
-        print("saved_nets found")
-
     print("Saving network")
     torch.save(u_net.state_dict(), p+'/save.pt')
 
+def download_coco():
+    glob_path = os.path.dirname(os.path.realpath("src"))
+    p = os.path.join(glob_path, "coco_img")
+    p2 = os.path.join(glob_path, "ann_file")
+    torchvision.datasets.CocoCaptions(p, p2, transform=None, target_transform=None, transforms=None)
+
 if __name__ == '__main__':
     main_device = init_main_device()
-    train(main_device, epochs=100, batch_size=1)
+    train(main_device, epochs=1000, batch_size=1)
 
 

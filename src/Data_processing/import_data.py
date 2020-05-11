@@ -1,5 +1,5 @@
 import numpy as np
-from matplotlib import pyplot
+import os
 from PIL import Image   
 import torch
 
@@ -24,10 +24,11 @@ def create_data(path, type, n_frames):
     for i in range(n_frames):
         try:
             img.seek(i)
-            frame = np.zeros((img.width, img.height))
+            img2 = img.resize((256, 256))
+            frame = np.zeros((img2.width, img2.height))
             for j in range(frame.shape[0]):
                 for k in range(frame.shape[1]):
-                    frame[j,k] = img.getpixel((j, k)) / 255
+                    frame[j,k] = img2.getpixel((j, k)) / 255
 
             frame = np.expand_dims(frame , 2)
             frame = frame.transpose((2, 0, 1))
@@ -39,6 +40,10 @@ def create_data(path, type, n_frames):
             break
 
     return np.asarray(all_imgs)
+
+def create_data_paths(path_image, path_mask):
+    return os.listdir(path_image), os.listdir(path_mask)
+
 
 
 def print_img(all_imgs):
