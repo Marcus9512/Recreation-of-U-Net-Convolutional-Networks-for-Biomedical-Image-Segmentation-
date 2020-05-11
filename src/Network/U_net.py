@@ -310,7 +310,7 @@ def train(device, epochs, batch_size):
     batch_train, batch_val = random_split(batch_train, [25, 5])
 
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
-    dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=False, pin_memory=True)
+    dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True, pin_memory=True)
 
     len_t = len(dataloader_train)
     len_v = len(dataloader_val)
@@ -411,7 +411,7 @@ def train(device, epochs, batch_size):
         summary.add_scalar('Loss/val', loss_val, e)
 
         #scheduler.step(loss_val)
-        if epochs % 5 == 0:
+        if epochs % 100 == 0:
             torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
