@@ -143,7 +143,7 @@ class U_NET(nn.Module):
         # U5 lowest
         x5 = self.conv9(self.pool1(x4))
         x5 = self.conv10(x5)
-        #x5 = self.dropout3(x5)
+        x5 = self.dropout3(x5)
 
         #Implement up-pass
 
@@ -311,9 +311,7 @@ def train(device, epochs, batch_size):
 
     batch_train = Custom_dataset()
 
-    augment()
-
-    batch_train, batch_val = random_split(batch_train, [150, 30])
+    batch_train, batch_val = random_split(batch_train, [25, 5])
 
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True, pin_memory=True)
@@ -325,8 +323,8 @@ def train(device, epochs, batch_size):
     evaluation = nn.BCEWithLogitsLoss()
     diceloss_eval = diceloss()
 
-    optimizer = opt.SGD(u_net.parameters(), lr=0.001,weight_decay=1e-8, momentum=0.99)
-    #scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
+    optimizer = opt.SGD(u_net.parameters(), lr=0.01,weight_decay=1e-8, momentum=0.99)
+    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
 
     summary = tb.SummaryWriter()
 
@@ -416,7 +414,7 @@ def train(device, epochs, batch_size):
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
 
-        #scheduler.step(loss_val)
+        scheduler.step(loss_val)
         if epochs % 100 == 0:
             torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
@@ -434,7 +432,8 @@ def download_coco():
     torchvision.datasets.CocoCaptions(p, p2, transform=None, target_transform=None, transforms=None)
 
 if __name__ == '__main__':
+    #augment()
     main_device = init_main_device()
-    train(main_device, epochs=1000, batch_size=1)
+    train(main_device, epochs=6000, batch_size=1)
 
 

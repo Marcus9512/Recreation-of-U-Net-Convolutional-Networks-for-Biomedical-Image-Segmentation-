@@ -14,6 +14,7 @@ class Custom_dataset(Dataset):
         print(self.glob_path_train)
         assert len(os.listdir(self.glob_path_train)) == len(os.listdir(self.glob_path_label))
         self.len = len(os.listdir(self.glob_path_train))
+
         print(os.listdir(self.glob_path_train))
 
     def __len__(self):
