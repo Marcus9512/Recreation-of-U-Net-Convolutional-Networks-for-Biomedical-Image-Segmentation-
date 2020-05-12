@@ -1,4 +1,5 @@
 import numpy as np
+from skimage import measure
 
 def split_to_training_and_validation(dataset, labels, percent_to_train, percent_to_test):
     assert len(dataset) == len(labels)
@@ -43,3 +44,8 @@ def rand_error(prediction, target):
             true_negative += 1
     return 1 - (true_positive+true_negative) / (n*(n-1)/2)
 
+def pixel_error(prediction, target):
+    mse_error = np.sum((prediction.astype("float") - target.astype("float")) ** 2)
+    mse_error /= float(prediction.shape[0] * target.shape[1])
+    s = measure.compare_ssim(prediction, target)
+    return mse_error, s
