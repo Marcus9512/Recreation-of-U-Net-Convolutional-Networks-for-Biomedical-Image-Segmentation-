@@ -288,7 +288,7 @@ if __name__ == '__main__':
         augment(5)
     # quicker test to check if you've broken the code
     if base_test:
-        train(main_device, epochs=100, batch_size=1, loss_function="bce")
+        train(main_device, epochs=100, batch_size=1, loss_function="dice")
 
     """
     Testing should probably be done in a more systematic manner where we search spans of values rather than these quick examples.

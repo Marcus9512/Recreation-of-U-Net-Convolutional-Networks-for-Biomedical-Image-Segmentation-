@@ -43,6 +43,15 @@ class diceloss(nn.Module):
         return grad_in, None
 
 
+def dice_coef(prediction, target):
+    # diceloss:
+    smooth = 1.
+    iflat = prediction.view(-1)
+    tflat = target.view(-1)
+    intersection = (iflat * tflat).sum()
+    sum = torch.sum(iflat * iflat) + torch.sum(tflat * tflat)
+    return ((2. * intersection + smooth) / (sum + smooth))
+
 # Training
 def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=False, learn_rate=.001, learn_decay=1e-8, learn_momentum=.99, per_train = 0.5, per_test = 0.25, per_val = 0.25):
     '''
@@ -135,6 +144,10 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
                 summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
                 summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
+                #dice_t = dice_coef(out, label)
+                #print("Dice loss train ",dice_t)
+                #summary.add_scalar('Dice_coef/train', dice_t, int(pos) + e * len_t)
+
             label = label.to(device=device, dtype=torch.float32)
 
             loss = evaluation(out, label)
@@ -161,6 +174,10 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
                     summary.add_image('val_res', torchvision.utils.make_grid(out) , int(pos) + e * len_v)
                     summary.add_image('val_in', torchvision.utils.make_grid(val), int(pos) + e * len_v)
                     summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
+
+                    #dice_v = dice_coef(out, label_val)
+                    #print("Dice loss train ", dice_v)
+                   # summary.add_scalar('Dice_coef/val', dice_v, int(pos) + e * len_v)
 
                 label_val = label_val.to(device=device, dtype=torch.float32)
 
