@@ -192,6 +192,9 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
 
         print("Training loss: ",loss_training)
         print("Validation loss: ", loss_val)
+        if  loss_function == "dice":
+            summary.add_scalar('Dice_co/train', -(loss_training-1), e)
+            summary.add_scalar('Dice_co/val', -(loss_val-1), e)
 
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
