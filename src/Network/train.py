@@ -44,7 +44,7 @@ class diceloss(nn.Module):
 
 
 # Training
-def train(device, epochs, batch_size):
+def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001, learn_decay=1e-8, learn_momentum=.99):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
     https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -63,11 +63,16 @@ def train(device, epochs, batch_size):
     len_t = len(dataloader_train)
     len_v = len(dataloader_val)
 
-    #Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    evaluation = nn.BCEWithLogitsLoss()
-    diceloss_eval = diceloss()
+    # Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
+    
+    if loss_function == "cross_ent":
+        evaluation = nn.CrossEntropyLoss()
+    elif loss_function == "bce":
+        evaluation = nn.BCEWithLogitsLoss()
+    elif loss_function == "dice":
+        evaluation = diceloss()
 
-    optimizer = opt.SGD(u_net.parameters(), lr=0.001,weight_decay=1e-8, momentum=0.99)
+    optimizer = opt.SGD(u_net.parameters(), lr=learn_rate, weight_decay=learn_decay, momentum=learn_momentum)
     scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
 
     summary = tb.SummaryWriter()

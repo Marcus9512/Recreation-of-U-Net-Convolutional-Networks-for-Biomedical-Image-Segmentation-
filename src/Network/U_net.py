@@ -280,4 +280,53 @@ def load_data():
 if __name__ == '__main__':
     #augment()
     main_device = init_main_device()
-    train(main_device, epochs=6000, batch_size=1)
+
+    """
+    This was what was what we were using:
+    train(main_device, epochs=6000, batch_size=1, loss_function="bce")
+    """
+
+    base_test = True
+    loss_test = False
+    learn_rate_test = False
+    learn_decay_test = False
+    learn_momentum_test = False
+
+    # quicker test to check if you've broken the code
+    if base_test:
+        train(main_device, epochs=6000, batch_size=1, loss_function="bce")
+
+    """
+    Testing should probably be done in a more systematic manner where we search spans of values rather than these quick examples.
+    We should also probably limit the number of epochs for these tests
+
+    We should also use the pixel/rand/warping error to evaluate these networks, currently this only sets up some quick tests as an example
+    """
+
+
+    # quick example for test of different loss-functions:
+    if loss_test:
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent")
+        train(main_device, epochs=6000, batch_size=1, loss_function="bce")
+        train(main_device, epochs=6000, batch_size=1, loss_function="dice")
+
+    # quick example for test of different learning rates:
+    if learn_rate_test:
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.1)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.01)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.001)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.0001)
+
+    # quick example for test of different amounts of decay
+    if learn_decay_test:
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=1e-7)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=1e-8)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=1e-9)
+
+    if learn_momentum_test:
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.96)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.97)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.98)
+        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.99)
+
+    
