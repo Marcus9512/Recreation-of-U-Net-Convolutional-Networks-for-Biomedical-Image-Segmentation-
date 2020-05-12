@@ -49,9 +49,12 @@ def augment(reps=5):
         #imageio.imsave('images/out/test_Y' + str(i) + ".png", Y[i][0])
         x = np.asarray(imageio.imread("data/train/"+str(i)+".jpg")).astype('float64')
         y = np.asarray(imageio.imread("data/label/"+str(i)+".jpg")).astype('float64')
+
+        print(i)
+
         for j in range(reps):
             [x0_ij, x1_ij, x2_ij, y_ij] = elasticdeform.deform_random_grid([x[:, :, 0], x[:, :, 1], x[:, :, 2] , y], sigma=10, points=3)
-            x_ij = x
+            x_ij = np.zeros((512, 512, 3))
             x_ij[:, :, 0] = x0_ij
             x_ij[:, :, 1] = x1_ij
             x_ij[:, :, 2] = x2_ij
