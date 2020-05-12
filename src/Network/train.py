@@ -1,4 +1,4 @@
-from U_net import U_NET
+from src.Network.U_net import U_NET
 
 import os
 import torch
@@ -44,7 +44,7 @@ class diceloss(nn.Module):
 
 
 # Training
-def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001, learn_decay=1e-8, learn_momentum=.99):
+def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=False, learn_rate=.001, learn_decay=1e-8, learn_momentum=.99):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
     https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -55,25 +55,40 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
 
     batch_train = Custom_dataset()
 
-    batch_train, batch_val = random_split(batch_train, [25, 5])
+    dataset_length = batch_train.__len__()
+    to_train = int(dataset_length*0.5)
+    to_test = int(dataset_length*0.25)
+    to_val = int(dataset_length*0.25)
+
+    assert to_train + to_test + to_val == dataset_length
+
+    batch_train, batch_val, batch_test = random_split(batch_train, [to_train, to_val, to_test])
 
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True, pin_memory=True)
+    dataloader_test = ut.DataLoader(batch_test, batch_size=batch_size, shuffle=True, pin_memory=True)
 
     len_t = len(dataloader_train)
     len_v = len(dataloader_val)
+    len_test = len(dataloader_test)
+
+    file_name = ""
 
     # Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    
     if loss_function == "cross_ent":
         evaluation = nn.CrossEntropyLoss()
-    elif loss_function == "bce":
-        evaluation = nn.BCEWithLogitsLoss()
+        file_name = "/cross_ent.pt"
     elif loss_function == "dice":
         evaluation = diceloss()
+        file_name = "/dice.pt"
+    else:
+        evaluation = nn.BCEWithLogitsLoss()
+        file_name = "/bce.pt"
 
     optimizer = opt.SGD(u_net.parameters(), lr=learn_rate, weight_decay=learn_decay, momentum=learn_momentum)
-    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
+
+    if use_schedular:
+        scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
 
     summary = tb.SummaryWriter()
 
@@ -114,12 +129,11 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
             #out = torch.sign(out)
 
             if pos == len_t-2:
-                summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
+                summary.add_image('training_res',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
                 summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
                 summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
             label = label.to(device=device, dtype=torch.float32)
-
 
             loss = evaluation(out, label)
             loss.backward()
@@ -163,13 +177,33 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
 
-        scheduler.step(loss_val)
-        if epochs % 100 == 0:
-            torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
+        if use_schedular:
+            scheduler.step(loss_val)
+        if e % 100 == 0:
+            torch.save(u_net.state_dict(), p + '/save_tmp'+str(e)+'pt')
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
     summary.close()
 
     print("Saving network")
-    torch.save(u_net.state_dict(), p+'/save.pt')
+
+    torch.save(u_net.state_dict(), p+file_name)
+
+    #Evaluation
+    print("Evaluation")
+    u_net.eval()
+    pos = 0
+    for j in dataloader_test:
+        test = j["data"]
+        label_test = j["label"]
+        test = test.to(device=device, dtype=torch.float32)
+
+        with torch.no_grad():
+            out = u_net(test)
+
+            summary.add_image('test_res', torchvision.utils.make_grid(out), int(pos))
+            summary.add_image('test_in', torchvision.utils.make_grid(test), int(pos))
+            summary.add_image('test_label', torchvision.utils.make_grid(label_test), int(pos))
+
+            label_val = label_val.to(device=device, dtype=torch.float32)

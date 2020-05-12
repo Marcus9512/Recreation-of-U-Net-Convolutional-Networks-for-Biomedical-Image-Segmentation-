@@ -1,20 +1,11 @@
-import os
-import torch
-import torchvision
+from src.Network.train import *
+
 import torch.nn as nn
-import torch.optim as opt
-import torch.utils.data as ut
-import torch.utils.tensorboard as tb
 
 from src.Tools.Tools import *
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
-from os import path
-
-from torch.autograd import Function
-from train import *
-
 
 #This variable can be used to check if the gpu is being used (if you want to test the program on a laptop without gpu)
 gpu_used = False
@@ -144,7 +135,7 @@ class U_NET(nn.Module):
         # U5 lowest
         x5 = self.conv9(self.pool1(x4))
         x5 = self.conv10(x5)
-        x5 = self.dropout3(x5)
+        #x5 = self.dropout3(x5)
 
         #Implement up-pass
 
@@ -278,7 +269,7 @@ def load_data():
 
 
 if __name__ == '__main__':
-    #augment()
+
     main_device = init_main_device()
 
     """
@@ -286,15 +277,18 @@ if __name__ == '__main__':
     train(main_device, epochs=6000, batch_size=1, loss_function="bce")
     """
 
+    generate_augmented_data = False
     base_test = True
     loss_test = False
     learn_rate_test = False
     learn_decay_test = False
     learn_momentum_test = False
 
+    if generate_augmented_data:
+        augment(5)
     # quicker test to check if you've broken the code
     if base_test:
-        train(main_device, epochs=6000, batch_size=1, loss_function="bce")
+        train(main_device, epochs=10, batch_size=1, loss_function="bce")
 
     """
     Testing should probably be done in a more systematic manner where we search spans of values rather than these quick examples.
@@ -303,30 +297,29 @@ if __name__ == '__main__':
     We should also use the pixel/rand/warping error to evaluate these networks, currently this only sets up some quick tests as an example
     """
 
-
     # quick example for test of different loss-functions:
     if loss_test:
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent")
-        train(main_device, epochs=6000, batch_size=1, loss_function="bce")
-        train(main_device, epochs=6000, batch_size=1, loss_function="dice")
+        train(main_device, epochs=100, batch_size=1, loss_function="cross_ent")
+        train(main_device, epochs=100, batch_size=1, loss_function="bce")
+        train(main_device, epochs=100, batch_size=1, loss_function="dice")
 
     # quick example for test of different learning rates:
     if learn_rate_test:
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.1)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.01)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.001)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=.0001)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.1)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.01)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.001)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.0001)
 
     # quick example for test of different amounts of decay
     if learn_decay_test:
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=1e-7)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=1e-8)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_rate=1e-9)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-7)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-8)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-9)
 
     if learn_momentum_test:
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.96)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.97)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.98)
-        train(main_device, epochs=6000, batch_size=1, loss_function="cross_ent", learn_momentum=.99)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.96)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.97)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.98)
+        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.99)
 
     
