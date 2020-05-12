@@ -323,7 +323,7 @@ def train(device, epochs, batch_size):
     evaluation = nn.BCEWithLogitsLoss()
     diceloss_eval = diceloss()
 
-    optimizer = opt.SGD(u_net.parameters(), lr=0.01,weight_decay=1e-8, momentum=0.99)
+    optimizer = opt.SGD(u_net.parameters(), lr=0.001,weight_decay=1e-8, momentum=0.99)
     scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
 
     summary = tb.SummaryWriter()
