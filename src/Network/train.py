@@ -44,7 +44,7 @@ class diceloss(nn.Module):
 
 
 # Training
-def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=False, learn_rate=.001, learn_decay=1e-8, learn_momentum=.99):
+def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=False, learn_rate=.001, learn_decay=1e-8, learn_momentum=.99, per_train = 0.5, per_test = 0.25, per_val = 0.25):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
     https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -56,11 +56,13 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     batch_train = Custom_dataset()
 
     dataset_length = batch_train.__len__()
-    to_train = int(dataset_length*0.5)
-    to_test = int(dataset_length*0.25)
-    to_val = int(dataset_length*0.25)
+    to_train = int(dataset_length*per_train)
+    to_test = int(dataset_length*per_test)
+    to_val = int(dataset_length*per_val)
 
-    assert to_train + to_test + to_val == dataset_length
+    sum = to_train + to_test + to_val
+    if sum < dataset_length:
+        to_val += dataset_length-sum
 
     batch_train, batch_val, batch_test = random_split(batch_train, [to_train, to_val, to_test])
 
