@@ -103,7 +103,7 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
 
     summary = tb.SummaryWriter()
 
-    print(len_t, len_v)
+    print(len_t, len_v, len_test)
 
     # Code for saving network
     glob_path = os.path.dirname(os.path.realpath("src"))
@@ -177,7 +177,7 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
 
                     #dice_v = dice_coef(out, label_val)
                     #print("Dice loss train ", dice_v)
-                   # summary.add_scalar('Dice_coef/val', dice_v, int(pos) + e * len_v)
+                    #summary.add_scalar('Dice_coef/val', dice_v, int(pos) + e * len_v)
 
                 label_val = label_val.to(device=device, dtype=torch.float32)
 
