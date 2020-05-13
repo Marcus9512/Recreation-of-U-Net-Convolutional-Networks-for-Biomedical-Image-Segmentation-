@@ -287,7 +287,7 @@ if __name__ == '__main__':
         augment_and_crop(5)
     # quicker test to check if you've broken the code
     if base_test:
-        train(main_device, epochs=3, batch_size=1, loss_function="dice")
+        train(main_device, epochs=3, batch_size=1, loss_function="bce")
 
     """
     Testing should probably be done in a more systematic manner where we search spans of values rather than these quick examples.
@@ -298,7 +298,7 @@ if __name__ == '__main__':
 
     # quick example for test of different loss-functions:
     if loss_test:
-        train(main_device, epochs=100, batch_size=1, loss_function="cross_ent")
+        #train(main_device, epochs=100, batch_size=1, loss_function="cross_ent")
         train(main_device, epochs=100, batch_size=1, loss_function="bce")
         train(main_device, epochs=100, batch_size=1, loss_function="dice")
 
@@ -309,16 +309,30 @@ if __name__ == '__main__':
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.001)
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.0001)
 
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.1)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.01)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.001)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.0001)
+
     # quick example for test of different amounts of decay
     if learn_decay_test:
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-7)
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-8)
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-9)
 
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_decay=1e-7)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_decay=1e-8)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_decay=1e-9)
+
     if learn_momentum_test:
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.96)
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.97)
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.98)
         train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.99)
+
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.96)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.97)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.98)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.99)
 
     

@@ -108,25 +108,29 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
 
     summary = tb.SummaryWriter()
 
+
     print(len_t, len_v, len_test)
 
     # Code for saving network
     glob_path = os.path.dirname(os.path.realpath("src"))
     p = os.path.join(glob_path,"saved_nets")
-    p2 = os.path.join(glob_path, "evaluation_images")
+
 
     if not path.exists(p):
         print("saved_nets not found, creating the directory")
         try:
-            os.mkdir(p)
+            os.mkdirs(p)
         except OSError as exc:
             raise
     else:
         print("saved_nets found")
 
+    p2 = os.path.join(glob_path, "evaluation_images/"+loss_function + "/lr_" + str(learn_rate) + "/lr_decay_" + str(learn_decay) + "/lr_moment_" + str(learn_momentum))
+
     if not path.exists(p2):
         try:
-            os.mkdir(p2)
+            os.makedirs(p2)
+
         except OSError as exc:
             raise
 
@@ -241,28 +245,27 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
         with torch.no_grad():
             out = u_net(test)
 
+            label_test = label_test.to(device=device, dtype=torch.float32)
+
             summary.add_image('test_res', torchvision.utils.make_grid(out), int(pos))
             summary.add_image('test_in', torchvision.utils.make_grid(test), int(pos))
             summary.add_image('test_label', torchvision.utils.make_grid(label_test), int(pos))
 
-            label_test = label_test.to(device=device, dtype=torch.float32)
-
-            #print(out.shape, test.shape)
-            #print(label_test.shape)
             out = out.squeeze(0)
             out = out.squeeze(0)
             label_test = label_test.squeeze(0)
             label_test = label_test.squeeze(0)
 
-            out = out.cpu().detach().numpy()*255
-            label_test = label_test.cpu().detach().numpy()*255
+            out = out.cpu().detach().numpy()
+            label_test = label_test.cpu().detach().numpy()
 
-            #print(out.shape)
-            #print(label_test.shape)
+            out = np.where(out > 0.5, 1, 0)
 
-            #rand_er += rand_error(out, label_test)
+            rand_er += rand_error_2(out, label_test)
             error, s1 = pixel_error(out, label_test)
-            print_img(error, s, out, label_test, "Image "+str(pos),p2)
+            print_img(error, s1, out, label_test, "Image "+str(pos),p2)
+
+
             mse_error += error
             s += s1
             pos += 1

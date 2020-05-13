@@ -28,11 +28,11 @@ def split_to_training_and_validation(dataset, labels, percent_to_train, percent_
             labels_vl.append(labels[index[i]])
 
     return training, labels_tr, validation, labels_vl, test, labels_test
-
+'''
 def rand_error(prediction, target):
-    '''
-    Using the formula from here: https://imagej.net/Rand_error
-    '''
+    
+    
+    
     iflat = prediction.view(-1)
     tflat = target.view(-1)
     true_positive = 0
@@ -44,6 +44,16 @@ def rand_error(prediction, target):
         elif iflat[i] == 0 and tflat[i] == 0:
             true_negative += 1
     return 1 - (true_positive+true_negative) / (n*(n-1)/2)
+'''
+
+def rand_error_2(prediction, target):
+    # Using the formula from here: https://imagej.net/Rand_error
+    assert len(prediction) == len(target)
+    assert len(prediction[0]) == len(target[0])
+    n = len(prediction)*len(prediction[0])
+    c = np.count_nonzero(prediction==target)
+    d = (n*(n-1))/2
+    return 1 - (c/d)
 
 def IOU(component1, component2):
     overlap = component1 * component1  # Logical AND
@@ -63,11 +73,11 @@ def print_img(m, s, A, B, title, path):
     fig = plt.figure(title)
     plt.suptitle("MSE: %.2f, SSIM: %.2f" % (m, s))
     # show first image
-    ax = fig.add_subplot(1, 2, 1)
+    fig.add_subplot(1, 2, 1)
     plt.imshow(A, cmap = plt.cm.gray)
     plt.axis("off")
     # show the second image
-    ax = fig.add_subplot(1, 2, 2)
+    fig.add_subplot(1, 2, 2)
     plt.imshow(B, cmap = plt.cm.gray)
     plt.axis("off")
     # show the images
