@@ -1,5 +1,5 @@
 import numpy as np
-from skimage import measure
+from skimage.metrics import structural_similarity as ssim
 
 def split_to_training_and_validation(dataset, labels, percent_to_train, percent_to_test):
     assert len(dataset) == len(labels)
@@ -45,7 +45,8 @@ def rand_error(prediction, target):
     return 1 - (true_positive+true_negative) / (n*(n-1)/2)
 
 def pixel_error(prediction, target):
+    # Images needs to be in same size
     mse_error = np.sum((prediction.astype("float") - target.astype("float")) ** 2)
     mse_error /= float(prediction.shape[0] * target.shape[1])
-    s = measure.compare_ssim(prediction, target)
+    s = ssim(prediction, target)
     return mse_error, s
