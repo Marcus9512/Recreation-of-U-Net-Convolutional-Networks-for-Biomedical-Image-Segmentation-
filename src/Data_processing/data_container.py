@@ -29,6 +29,7 @@ class Custom_dataset(Dataset):
 
         image = np.asarray(image)
         label = np.asarray(label)
+
         #print(image.shape)
         #print(label.shape)
 

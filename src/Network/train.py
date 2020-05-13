@@ -1,7 +1,8 @@
-from U_net import U_NET
+from src.Network.U_net import U_NET
 
 import os
 import torch
+import glob
 import torchvision
 import torch.nn as nn
 import torch.optim as opt
@@ -12,6 +13,8 @@ from src.Tools.Tools import *
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
+from PIL import Image
+
 from os import path
 
 # Diceloss added as a module to nn
@@ -42,8 +45,17 @@ class diceloss(nn.Module):
         return grad_in, None
 
 
+def dice_coef(prediction, target):
+    # diceloss:
+    smooth = 1.
+    iflat = prediction.view(-1)
+    tflat = target.view(-1)
+    intersection = (iflat * tflat).sum()
+    sum = torch.sum(iflat * iflat) + torch.sum(tflat * tflat)
+    return ((2. * intersection + smooth) / (sum + smooth))
+
 # Training
-def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001, learn_decay=1e-8, learn_momentum=.99):
+def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=False, learn_rate=.001, learn_decay=1e-8, learn_momentum=.99, per_train = 0.5, per_test = 0.25, per_val = 0.25):
     '''
     Trains the network, the training loop is inspired by pytorchs tutorial, see
     https://pytorch.org/tutorials/beginner/blitz/cifar10_tutorial.html
@@ -55,31 +67,50 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
     reps = 5
     augment_and_crop(reps=reps)
     batch_train = Custom_dataset()
-    total_size = batch_train.len
+    dataset_length = batch_train.len
+    
     assert(total_size == 30*4+30*reps)
-    batch_train, batch_val = random_split(batch_train, [total_size-50, 50])
+    
+    to_train = int(dataset_length*per_train)
+    to_test = int(dataset_length*per_test)
+    to_val = int(dataset_length*per_val)
 
+    sum = to_train + to_test + to_val
+    if sum < dataset_length:
+        to_val += dataset_length-sum
+
+    batch_train, batch_val, batch_test = random_split(batch_train, [to_train, to_val, to_test])
+
+    
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True, pin_memory=True)
+    dataloader_test = ut.DataLoader(batch_test, batch_size=batch_size, shuffle=True, pin_memory=True)
 
     len_t = len(dataloader_train)
     len_v = len(dataloader_val)
+    len_test = len(dataloader_test)
+
+    file_name = ""
 
     # Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
-    
     if loss_function == "cross_ent":
         evaluation = nn.CrossEntropyLoss()
-    elif loss_function == "bce":
-        evaluation = nn.BCEWithLogitsLoss()
+        file_name = "/cross_ent.pt"
     elif loss_function == "dice":
         evaluation = diceloss()
+        file_name = "/dice.pt"
+    else:
+        evaluation = nn.BCEWithLogitsLoss()
+        file_name = "/bce.pt"
 
     optimizer = opt.SGD(u_net.parameters(), lr=learn_rate, weight_decay=learn_decay, momentum=learn_momentum)
-    scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
+
+    if use_schedular:
+        scheduler = opt.lr_scheduler.ReduceLROnPlateau(optimizer, 'max', patience=2)
 
     summary = tb.SummaryWriter()
 
-    print(len_t, len_v)
+    print(len_t, len_v, len_test)
 
     # Code for saving network
     glob_path = os.path.dirname(os.path.realpath("src"))
@@ -116,12 +147,15 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
             #out = torch.sign(out)
 
             if pos == len_t-2:
-                summary.add_image('training_out',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
+                summary.add_image('training_res',torchvision.utils.make_grid(out), int(pos)+ e * len_t)
                 summary.add_image('training_in', torchvision.utils.make_grid(train), int(pos) + e * len_t)
                 summary.add_image('training_label', torchvision.utils.make_grid(label), int(pos) + e * len_t)
 
-            label = label.to(device=device, dtype=torch.float32)
+                #dice_t = dice_coef(out, label)
+                #print("Dice loss train ",dice_t)
+                #summary.add_scalar('Dice_coef/train', dice_t, int(pos) + e * len_t)
 
+            label = label.to(device=device, dtype=torch.float32)
 
             loss = evaluation(out, label)
             loss.backward()
@@ -148,6 +182,10 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
                     summary.add_image('val_in', torchvision.utils.make_grid(val), int(pos) + e * len_v)
                     summary.add_image('val_label', torchvision.utils.make_grid(label_val), int(pos) + e * len_v)
 
+                    #dice_v = dice_coef(out, label_val)
+                    #print("Dice loss train ", dice_v)
+                    #summary.add_scalar('Dice_coef/val', dice_v, int(pos) + e * len_v)
+
                 label_val = label_val.to(device=device, dtype=torch.float32)
 
                 #out = torch.sigmoid(out)
@@ -161,17 +199,64 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
 
         print("Training loss: ",loss_training)
         print("Validation loss: ", loss_val)
+        if  loss_function == "dice":
+            print("Dice co training: ", -(loss_training-1))
+            print("Dice co val: ", -(loss_val-1))
+            summary.add_scalar('Dice_co/train', -(loss_training-1), e)
+            summary.add_scalar('Dice_co/val', -(loss_val-1), e)
 
         summary.add_scalar('Loss/train', loss_training, e)
         summary.add_scalar('Loss/val', loss_val, e)
 
-        scheduler.step(loss_val)
-        if epochs % 100 == 0:
-            torch.save(u_net.state_dict(), p + '/save'+str(e)+'pt')
+        if use_schedular:
+            scheduler.step(loss_val)
+        if e % 100 == 0:
+            torch.save(u_net.state_dict(), p + '/save_tmp'+str(e)+'pt')
         # print(torch.cuda.memory_summary(device=None, abbreviated=False))
 
     summary.flush()
     summary.close()
 
     print("Saving network")
-    torch.save(u_net.state_dict(), p+'/save.pt')
+
+    torch.save(u_net.state_dict(), p+file_name)
+
+    #Evaluation
+    print("Evaluation")
+    u_net.eval()
+    pos = 0
+    mse_error = 0
+    s = 0
+    rand_er = 0
+    for j in dataloader_test:
+        test = j["data"]
+        label_test = j["label"]
+        test = test.to(device=device, dtype=torch.float32)
+
+        with torch.no_grad():
+            out = u_net(test)
+
+            summary.add_image('test_res', torchvision.utils.make_grid(out), int(pos))
+            summary.add_image('test_in', torchvision.utils.make_grid(test), int(pos))
+            summary.add_image('test_label', torchvision.utils.make_grid(label_test), int(pos))
+
+            label_test = label_test.to(device=device, dtype=torch.float32)
+
+            #print(out.shape, test.shape)
+            #print(label_test.shape)
+            out = out.squeeze(0)
+            out = out.squeeze(0)
+            label_test = label_test.squeeze(0)
+            label_test = label_test.squeeze(0)
+
+            out = out.cpu().detach().numpy()
+            label_test = label_test.cpu().detach().numpy()
+
+            rand_er += rand_error(out, label_test)
+            error, s1 = pixel_error(out, label_test)
+            mse_error += error
+            s += s1
+            pos += 1
+    print("Mse error: ",mse_error/pos," s: ",s/pos)
+
+    print("Rand error: ",rand_er/pos)
