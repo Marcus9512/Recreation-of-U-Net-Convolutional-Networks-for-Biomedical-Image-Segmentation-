@@ -47,5 +47,5 @@ def rand_error(prediction, target):
 def pixel_error(prediction, target):
     mse_error = np.sum((prediction.astype("float") - target.astype("float")) ** 2)
     mse_error /= float(prediction.shape[0] * target.shape[1])
-    s = measure.compare_ssim(prediction, target)
+    s = measure.compare_ssim(prediction, target, multichannel=True)
     return mse_error, s

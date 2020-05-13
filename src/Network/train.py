@@ -2,6 +2,7 @@ from src.Network.U_net import U_NET
 
 import os
 import torch
+import glob
 import torchvision
 import torch.nn as nn
 import torch.optim as opt
@@ -12,6 +13,8 @@ from src.Tools.Tools import *
 from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
+from PIL import Image
+
 from os import path
 
 # Diceloss added as a module to nn
@@ -193,6 +196,8 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
         print("Training loss: ",loss_training)
         print("Validation loss: ", loss_val)
         if  loss_function == "dice":
+            print("Dice co training: ", -(loss_training-1))
+            print("Dice co val: ", -(loss_val-1))
             summary.add_scalar('Dice_co/train', -(loss_training-1), e)
             summary.add_scalar('Dice_co/val', -(loss_val-1), e)
 
@@ -216,6 +221,8 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     print("Evaluation")
     u_net.eval()
     pos = 0
+    mse_error = 0
+    s = 0
     for j in dataloader_test:
         test = j["data"]
         label_test = j["label"]
@@ -228,4 +235,19 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
             summary.add_image('test_in', torchvision.utils.make_grid(test), int(pos))
             summary.add_image('test_label', torchvision.utils.make_grid(label_test), int(pos))
 
-            label_val = label_val.to(device=device, dtype=torch.float32)
+            label_test = label_test.to(device=device, dtype=torch.float32)
+
+            #print(out.shape, test.shape)
+            #print(label_test.shape)
+
+            out.cpu().detach().numpy()
+            label_test.cpu().detach().numpy()
+
+            print(out.shape)
+            print(label_test.shape)
+
+            error, s1 = pixel_error(out, label_test)
+            mse_error += error
+            s += s1
+            pos += 1
+    print("Mse error: ",mse_error/pos," s: ",s/pos)
