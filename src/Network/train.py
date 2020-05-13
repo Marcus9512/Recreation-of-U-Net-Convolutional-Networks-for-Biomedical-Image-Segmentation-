@@ -243,9 +243,10 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
             out.cpu().detach().numpy()
             label_test.cpu().detach().numpy()
 
-            print(out.shape)
+            print(out)
             print(label_test.shape)
 
+            rand_error(out, label_test)
             error, s1 = pixel_error(out, label_test)
             mse_error += error
             s += s1
