@@ -1,9 +1,8 @@
 from src.Network.train import *
 
+import torch
 import torch.nn as nn
-
 from src.Tools.Tools import *
-from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
 
@@ -285,7 +284,7 @@ if __name__ == '__main__':
     learn_momentum_test = False
 
     if generate_augmented_data:
-        augment(5)
+        augment_and_crop(5)
     # quicker test to check if you've broken the code
     if base_test:
         train(main_device, epochs=3, batch_size=1, loss_function="dice")

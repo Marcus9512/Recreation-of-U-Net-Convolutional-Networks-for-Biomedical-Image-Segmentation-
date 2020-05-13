@@ -59,10 +59,10 @@ def pixel_error(prediction, target):
     s = ssim(prediction, target, multichannel=True)
     return mse_error, s
 
-def print_img(m, s, A, B, title):
+def print_img(m, s, A, B, title, path):
     fig = plt.figure(title)
     plt.suptitle("MSE: %.2f, SSIM: %.2f" % (m, s))
-	# show first image
+    # show first image
     ax = fig.add_subplot(1, 2, 1)
     plt.imshow(A, cmap = plt.cm.gray)
     plt.axis("off")
@@ -71,4 +71,4 @@ def print_img(m, s, A, B, title):
     plt.imshow(B, cmap = plt.cm.gray)
     plt.axis("off")
     # show the images
-    plt.show()
+    plt.savefig(path+'/'+title+'.png')

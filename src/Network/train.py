@@ -10,7 +10,6 @@ import torch.utils.data as ut
 import torch.utils.tensorboard as tb
 
 from src.Tools.Tools import *
-from src.Data_processing.import_data import *
 from src.Data_processing.data_container import *
 from src.Data_processing.augment_data import *
 from PIL import Image
@@ -64,12 +63,11 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     u_net = U_NET(0.1)
     u_net.to(device)
 
-    reps = 5
-    augment_and_crop(reps=reps)
+
     batch_train = Custom_dataset()
     dataset_length = batch_train.len
     
-    assert(dataset_length == 30*4+30*reps)
+    #assert(dataset_length == 30*4+30)
     
     to_train = int(dataset_length*per_train)
     to_test = int(dataset_length*per_test)
@@ -115,6 +113,7 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     # Code for saving network
     glob_path = os.path.dirname(os.path.realpath("src"))
     p = os.path.join(glob_path,"saved_nets")
+    p2 = os.path.join(glob_path, "evaluation_images")
 
     if not path.exists(p):
         print("saved_nets not found, creating the directory")
@@ -124,6 +123,12 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
             raise
     else:
         print("saved_nets found")
+
+    if not path.exists(p2):
+        try:
+            os.mkdir(p2)
+        except OSError as exc:
+            raise
 
     #Training loop
 
@@ -249,14 +254,15 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
             label_test = label_test.squeeze(0)
             label_test = label_test.squeeze(0)
 
-            out = out.cpu().detach().numpy()
-            label_test = label_test.cpu().detach().numpy()
+            out = out.cpu().detach().numpy()*255
+            label_test = label_test.cpu().detach().numpy()*255
 
-            print(out.shape)
-            print(label_test.shape)
+            #print(out.shape)
+            #print(label_test.shape)
 
             #rand_er += rand_error(out, label_test)
             error, s1 = pixel_error(out, label_test)
+            print_img(error, s, out, label_test, "Image "+str(pos),p2)
             mse_error += error
             s += s1
             pos += 1
