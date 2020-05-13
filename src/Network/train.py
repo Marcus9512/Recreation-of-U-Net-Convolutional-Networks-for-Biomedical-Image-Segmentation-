@@ -69,7 +69,7 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     batch_train = Custom_dataset()
     dataset_length = batch_train.len
     
-    assert(total_size == 30*4+30*reps)
+    assert(dataset_length == 30*4+30*reps)
     
     to_train = int(dataset_length*per_train)
     to_test = int(dataset_length*per_test)
