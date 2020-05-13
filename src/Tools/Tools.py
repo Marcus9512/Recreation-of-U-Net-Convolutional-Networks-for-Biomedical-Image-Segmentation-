@@ -45,6 +45,13 @@ def rand_error(prediction, target):
             true_negative += 1
     return 1 - (true_positive+true_negative) / (n*(n-1)/2)
 
+def IOU(component1, component2):
+    overlap = component1 * component1  # Logical AND
+    union = component1 + component2  # Logical OR
+
+    IOU = overlap.sum() / float(union.sum())
+    return IOU
+  
 def pixel_error(prediction, target):
     # Images needs to be in same size
     mse_error = np.sum((prediction.astype("float") - target.astype("float")) ** 2)

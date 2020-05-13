@@ -205,3 +205,5 @@ u-net-release/
 .DS_Store
 /.idea/
 /images/
+/data/train/
+/data/label/
