@@ -63,10 +63,11 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     u_net = U_NET(0.1)
     u_net.to(device)
 
+    augment_and_crop()
 
     batch_train = Custom_dataset()
     dataset_length = batch_train.len
-    
+
     #assert(dataset_length == 30*4+30)
     
     to_train = int(dataset_length*per_train)
@@ -78,7 +79,6 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
         to_val += dataset_length-sum
 
     batch_train, batch_val, batch_test = random_split(batch_train, [to_train, to_val, to_test])
-
     
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True, pin_memory=True)
