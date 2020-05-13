@@ -1,6 +1,8 @@
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
 import matplotlib.pyplot as plt
+from skimage.metrics import (adapted_rand_error,
+                              variation_of_information)
 
 def split_to_training_and_validation(dataset, labels, percent_to_train, percent_to_test):
     assert len(dataset) == len(labels)
@@ -51,9 +53,22 @@ def rand_error_2(prediction, target):
     assert len(prediction) == len(target)
     assert len(prediction[0]) == len(target[0])
     n = len(prediction)*len(prediction[0])
-    c = np.count_nonzero(prediction==target)
+    a = 0
+    b = 0
+    pred = prediction.flatten()
+    targ = target.flatten()
+    print(pred)
+    for i in range(len(pred)):
+        for j in range(i):
+            if pred[i] == pred[j] and targ[i] == targ[j]:
+                a+=1
+            elif pred[i] != pred[0][j] and targ[i] != targ[j]:
+                b+=1
     d = (n*(n-1))/2
-    return 1 - (c/d)
+    return 1 - ((a+b)/d)
+
+def rand_error_3(prediction, target):
+    return adapted_rand_error(prediction, target)
 
 def IOU(component1, component2):
     overlap = component1 * component1  # Logical AND

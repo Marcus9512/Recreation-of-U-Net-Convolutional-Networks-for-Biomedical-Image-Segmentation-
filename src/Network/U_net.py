@@ -266,8 +266,8 @@ def load_data():
 
 '''
 
-
 if __name__ == '__main__':
+
 
     main_device = init_main_device()
 
@@ -277,8 +277,8 @@ if __name__ == '__main__':
     """
 
     generate_augmented_data = False
-    base_test = False
-    loss_test = True
+    base_test = True
+    loss_test = False
     learn_rate_test = False
     learn_decay_test = False
     learn_momentum_test = False
@@ -299,8 +299,8 @@ if __name__ == '__main__':
     # quick example for test of different loss-functions:
     if loss_test:
         #train(main_device, epochs=100, batch_size=1, loss_function="cross_ent")
-        train(main_device, epochs=200, batch_size=1, loss_function="bce")
-        train(main_device, epochs=200, batch_size=1, loss_function="dice")
+        train(main_device, epochs=1000, batch_size=1, loss_function="bce")
+        train(main_device, epochs=1000, batch_size=1, loss_function="dice")
 
     # quick example for test of different learning rates:
     if learn_rate_test:

@@ -259,7 +259,8 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
 
             out = np.where(out > 0.5, 1, 0)
 
-            rand_er += rand_error_2(out, label_test)
+            x, _, _ = rand_error_3((out+1).astype(np.int64), (label_test+1).astype(np.int64))
+            rand_er += x
             error, s1 = pixel_error(out, label_test)
             print_img(error, s1, out, label_test, "Image "+str(pos),p2)
 
@@ -267,6 +268,6 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
             mse_error += error
             s += s1
             pos += 1
-    print("Mse error: ",mse_error/pos," s: ",s/pos)
 
+    print("Mse error: ",mse_error/pos," s: ",s/pos)
     print("Rand error: ",rand_er/pos)
