@@ -63,8 +63,6 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     u_net = U_NET(0.1)
     u_net.to(device)
 
-    augment_and_crop()
-
     batch_train = Custom_dataset()
     dataset_length = batch_train.len
 
@@ -93,13 +91,13 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     # Initilize evaluation and optimizer, optimizer is set to standard-values, might want to change those
     if loss_function == "cross_ent":
         evaluation = nn.CrossEntropyLoss()
-        file_name = "/cross_ent.pt"
+        file_name = "/cross_ent-"+"lr="+str(learn_rate)+"-lr_weight="+str(learn_decay)+"-lr_moment="+str(learn_momentum)+".pt"
     elif loss_function == "dice":
         evaluation = diceloss()
-        file_name = "/dice.pt"
+        file_name = "/dice-"+"lr="+str(learn_rate)+"-lr_weight="+str(learn_decay)+"-lr_moment="+str(learn_momentum)+".pt"
     else:
         evaluation = nn.BCEWithLogitsLoss()
-        file_name = "/bce.pt"
+        file_name = "/bce-"+"lr="+str(learn_rate)+"-lr_weight="+str(learn_decay)+"-lr_moment="+str(learn_momentum)+".pt"
 
     optimizer = opt.SGD(u_net.parameters(), lr=learn_rate, weight_decay=learn_decay, momentum=learn_momentum)
 

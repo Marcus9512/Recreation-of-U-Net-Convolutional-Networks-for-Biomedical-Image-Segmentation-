@@ -277,14 +277,14 @@ if __name__ == '__main__':
     """
 
     generate_augmented_data = False
-    base_test = True
-    loss_test = False
+    base_test = False
+    loss_test = True
     learn_rate_test = False
     learn_decay_test = False
     learn_momentum_test = False
 
     if generate_augmented_data:
-        augment_and_crop(5)
+        augment_and_crop(10)
     # quicker test to check if you've broken the code
     if base_test:
         train(main_device, epochs=3, batch_size=1, loss_function="bce")
@@ -299,40 +299,38 @@ if __name__ == '__main__':
     # quick example for test of different loss-functions:
     if loss_test:
         #train(main_device, epochs=100, batch_size=1, loss_function="cross_ent")
-        train(main_device, epochs=100, batch_size=1, loss_function="bce")
-        train(main_device, epochs=100, batch_size=1, loss_function="dice")
+        train(main_device, epochs=200, batch_size=1, loss_function="bce")
+        train(main_device, epochs=200, batch_size=1, loss_function="dice")
 
     # quick example for test of different learning rates:
     if learn_rate_test:
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.1)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.01)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.001)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_rate=.0001)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_rate=.1)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_rate=.01)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_rate=.001)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_rate=.0001)
 
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.1)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.01)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.001)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_rate=.0001)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_rate=.1)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_rate=.01)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_rate=.001)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_rate=.0001)
 
     # quick example for test of different amounts of decay
     if learn_decay_test:
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-7)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-8)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_decay=1e-9)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_decay=1e-7)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_decay=1e-8)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_decay=1e-9)
 
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_decay=1e-7)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_decay=1e-8)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_decay=1e-9)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_decay=1e-7)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_decay=1e-8)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_decay=1e-9)
 
     if learn_momentum_test:
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.96)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.97)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.98)
-        train(main_device, epochs=100, batch_size=1, loss_function="bce", learn_momentum=.99)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_momentum=.96)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_momentum=.97)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_momentum=.98)
+        train(main_device, epochs=500, batch_size=1, loss_function="bce", learn_momentum=.99)
 
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.96)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.97)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.98)
-        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.99)
-
-    
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.96)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.97)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.98)
+        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.99)
