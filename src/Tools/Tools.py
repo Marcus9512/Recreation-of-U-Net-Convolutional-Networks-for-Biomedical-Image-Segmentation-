@@ -1,5 +1,6 @@
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
+import matplotlib.pyplot as plt
 
 def split_to_training_and_validation(dataset, labels, percent_to_train, percent_to_test):
     assert len(dataset) == len(labels)
@@ -50,3 +51,17 @@ def pixel_error(prediction, target):
     mse_error /= float(prediction.shape[0] * target.shape[1])
     s = ssim(prediction, target)
     return mse_error, s
+
+def print_img(m, s, A, B, title):
+    fig = plt.figure(title)
+    plt.suptitle("MSE: %.2f, SSIM: %.2f" % (m, s))
+	# show first image
+    ax = fig.add_subplot(1, 2, 1)
+    plt.imshow(A, cmap = plt.cm.gray)
+    plt.axis("off")
+    # show the second image
+    ax = fig.add_subplot(1, 2, 2)
+    plt.imshow(B, cmap = plt.cm.gray)
+    plt.axis("off")
+    # show the images
+    plt.show()

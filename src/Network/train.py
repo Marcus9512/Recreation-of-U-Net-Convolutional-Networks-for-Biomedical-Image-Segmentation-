@@ -223,6 +223,7 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     pos = 0
     mse_error = 0
     s = 0
+    rand_er = 0
     for j in dataloader_test:
         test = j["data"]
         label_test = j["label"]
@@ -239,16 +240,18 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
 
             #print(out.shape, test.shape)
             #print(label_test.shape)
+            out = out.squeeze(0)
+            out = out.squeeze(0)
+            label_test = label_test.squeeze(0)
+            label_test = label_test.squeeze(0)
 
-            out.cpu().detach().numpy()
-            label_test.cpu().detach().numpy()
+            out = out.cpu().detach().numpy()
+            label_test = label_test.cpu().detach().numpy()
 
-            print(out)
-            print(label_test.shape)
-
-            rand_error(out, label_test)
+            rand_er += rand_error(out, label_test)
             error, s1 = pixel_error(out, label_test)
             mse_error += error
             s += s1
             pos += 1
     print("Mse error: ",mse_error/pos," s: ",s/pos)
+    print("Rand error: ",rand_er/pos)
