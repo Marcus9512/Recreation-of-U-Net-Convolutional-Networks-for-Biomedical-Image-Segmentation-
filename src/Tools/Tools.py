@@ -48,5 +48,5 @@ def pixel_error(prediction, target):
     # Images needs to be in same size
     mse_error = np.sum((prediction.astype("float") - target.astype("float")) ** 2)
     mse_error /= float(prediction.shape[0] * target.shape[1])
-    s = ssim(prediction, target)
+    s = ssim(prediction, target, multichannel=True)
     return mse_error, s
