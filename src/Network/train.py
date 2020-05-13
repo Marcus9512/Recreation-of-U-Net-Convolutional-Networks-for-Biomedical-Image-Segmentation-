@@ -20,7 +20,6 @@ class diceloss(nn.Module):
         super(diceloss, self).init()
 
     def forward(self, prediction, target):
-
         # saving for backwards:
         self.prediction = prediction
         self.target = target
@@ -53,9 +52,12 @@ def train(device, epochs, batch_size, loss_function="cross_ent", learn_rate=.001
     u_net = U_NET(0.1)
     u_net.to(device)
 
+    reps = 5
+    augment_and_crop(reps=reps)
     batch_train = Custom_dataset()
-
-    batch_train, batch_val = random_split(batch_train, [25, 5])
+    total_size = batch_train.len
+    assert(total_size == 30*4+30*reps)
+    batch_train, batch_val = random_split(batch_train, [total_size-50, 50])
 
     dataloader_train = ut.DataLoader(batch_train, batch_size=batch_size,shuffle=True, pin_memory=True)
     dataloader_val = ut.DataLoader(batch_val, batch_size=batch_size, shuffle=True, pin_memory=True)
