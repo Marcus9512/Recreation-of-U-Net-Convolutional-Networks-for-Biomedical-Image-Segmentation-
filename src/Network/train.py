@@ -254,4 +254,5 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
             s += s1
             pos += 1
     print("Mse error: ",mse_error/pos," s: ",s/pos)
+
     print("Rand error: ",rand_er/pos)
