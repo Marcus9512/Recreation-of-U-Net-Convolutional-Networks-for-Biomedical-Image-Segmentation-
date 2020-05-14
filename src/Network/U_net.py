@@ -107,8 +107,6 @@ class U_NET(nn.Module):
         # 1x1 convulution
         self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
         self.sigmoid = nn.Sigmoid()
-        #self.softmax = nn.Softmax()
-        #torch.nn.init.normal_(self.conv1x1.weight, 0, np.sqrt(2 / 64))
 
     def forward(self, x):
         # U1
@@ -214,28 +212,6 @@ class Up_conv(nn.Module):
         return self.up(x)
       
 
-'''
-   OLD CODE GRAVE
-   
-   #frames = 30 # aka length of dataset
-
-    #Load data
-    #path_train = 'data/'
-    #raw_train = create_data(path_train, 'train_v', frames)
-    #raw_labels = create_data(path_train, 'train_l', frames)
-
-    #raw_train, raw_labels = augment_and_crop(raw_train, raw_labels, 5)
-    #[X_deformed, Y_deformed] = augment(raw_train, raw_labels, 10)
-    #raw_train = np.append(raw_train, X_deformed, axis=0)
-    #raw_labels = np.append(raw_labels, Y_deformed, axis=0)
-    
-    #raw_train = torch.from_numpy(raw_train)
-    #raw_labels = torch.from_numpy(raw_labels)
-
-
-    #train, train_labels, val, val_labels, test, test_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8, 0.0)
-
-'''
 if __name__ == '__main__':
 
 
@@ -252,6 +228,7 @@ if __name__ == '__main__':
     learn_rate_test = False
     learn_decay_test = False
     learn_momentum_test = False
+    final_test = True
 
     if generate_augmented_data:
         augment_and_crop(10)
@@ -268,7 +245,6 @@ if __name__ == '__main__':
 
     # quick example for test of different loss-functions:
     if loss_test:
-        #train(main_device, epochs=100, batch_size=1, loss_function="cross_ent")
         train(main_device, epochs=1000, batch_size=1, loss_function="bce")
         train(main_device, epochs=1000, batch_size=1, loss_function="dice")
 
@@ -304,3 +280,7 @@ if __name__ == '__main__':
         train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.97)
         train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.98)
         train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.99)
+
+    if final_test:
+        train(main_device, epochs=800, batch_size=1, loss_function="bce", learn_decay=1e-9, learn_momentum=0.99, learn_rate=0.001)
+        train(main_device, epochs=800, batch_size=1, loss_function="dice", learn_decay=1e-9, learn_momentum=0.99, learn_rate=0.001)

@@ -139,6 +139,15 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
         except OSError as exc:
             raise
 
+    p3 = os.path.join(glob_path, "results")
+
+    if not path.exists(p3):
+        try:
+            os.mkdir(p3)
+
+        except OSError as exc:
+            raise
+
     #Training loop
 
     for e in range(epochs):
@@ -268,3 +277,8 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
 
     print("Mse error: ",mse_error/pos," s: ",s/pos)
     print("Rand error: ",rand_er/pos)
+
+    text = open("results"+loss_function+"-lr_"+str(learn_rate)+"-moment_"+str(learn_momentum)+"-weight_"+str(learn_decay)+".txt", "w+")
+    text.write("Mse error: "+str(mse_error/pos)+" s: "+str(s/pos))
+    text.write("Rand error: "+str(rand_er/pos))
+    text.close()
