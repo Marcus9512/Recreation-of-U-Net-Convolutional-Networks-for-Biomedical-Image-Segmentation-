@@ -214,35 +214,6 @@ class Up_conv(nn.Module):
         return self.up(x)
       
 
-def load_net(device):
-    glob_path = os.path.dirname(os.path.realpath("src"))
-    p = os.path.join(glob_path, "saved_nets")
-    model = torch.load(p)
-    #evaluate_model_no_label(device, model)
-
-
-'''
-def load_data():
-    frames = 30  # aka length of dataset
-
-    path_train = 'data/'
-    raw_train = create_data(path_train, 'train_v', frames)
-    raw_labels = create_data(path_train, 'train_l', frames)
-
-    #np.asarray(all_imgs)
-
-    [X_deformed, Y_deformed] = augment_and_crop(raw_train, raw_labels, 5)
-    raw_train = np.append(raw_train, X_deformed, axis=0)
-    raw_labels = np.append(raw_labels, Y_deformed, axis=0)
-
-    raw_train = torch.from_numpy(raw_train)
-    raw_labels = torch.from_numpy(raw_labels)
-
-    def resize(imgs):
-        img2 = img.resize((256, 256))
-        frame = np.zeros((img2.width, img2.height))
-
-'''
 '''
    OLD CODE GRAVE
    
@@ -265,7 +236,6 @@ def load_data():
     #train, train_labels, val, val_labels, test, test_labels = split_to_training_and_validation(raw_train, raw_labels, 0.8, 0.0)
 
 '''
-
 if __name__ == '__main__':
 
 
@@ -277,7 +247,7 @@ if __name__ == '__main__':
     """
 
     generate_augmented_data = False
-    base_test = True
+    base_test = False
     loss_test = False
     learn_rate_test = False
     learn_decay_test = False
@@ -332,5 +302,5 @@ if __name__ == '__main__':
 
         train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.96)
         train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.97)
-        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.98)
-        train(main_device, epochs=500, batch_size=1, loss_function="dice", learn_momentum=.99)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.98)
+        train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.99)

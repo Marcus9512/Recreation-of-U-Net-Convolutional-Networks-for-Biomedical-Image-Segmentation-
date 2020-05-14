@@ -1,0 +1,34 @@
+import os
+import numpy as np
+from torch.utils.data import *
+from PIL import Image
+
+class Test_dataset(Dataset):
+    '''
+     Custom dataset class to be able to use our dataset
+    '''
+
+    def __init__(self):
+        self.glob_path_test = os.path.join(os.path.dirname(os.path.realpath("data/test")), 'test')
+        print(self.glob_path_test)
+        self.len = len(os.listdir(self.glob_path_test))
+
+        print(os.listdir(self.glob_path_test))
+
+    def __len__(self):
+        return self.len
+
+    def __getitem__(self, item):
+        p_test = os.path.join(self.glob_path_test, str(item)+'.jpg')
+
+        image = Image.open(p_test)
+
+        image = np.asarray(image)
+
+        #print(image.shape)
+        #print(label.shape)
+
+        image = image.transpose((2, 0, 1))
+
+
+        return {"data":image/255}

@@ -8,7 +8,7 @@ class Custom_dataset(Dataset):
      Custom dataset class to be able to use our dataset
     '''
 
-    def __init__(self):
+    def __init__(self, path=None):
         self.glob_path_train = os.path.join(os.path.dirname(os.path.realpath("data/train")), 'train')
         self.glob_path_label = os.path.join(os.path.dirname(os.path.realpath("data/label")), 'label')
         print(self.glob_path_train)
