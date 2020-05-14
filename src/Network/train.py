@@ -124,7 +124,7 @@ def train(device, epochs, batch_size, loss_function="cross_ent", use_schedular=F
     if not path.exists(p):
         print("saved_nets not found, creating the directory")
         try:
-            os.mkdirs(p)
+            os.mkdir(p)
         except OSError as exc:
             raise
     else:
