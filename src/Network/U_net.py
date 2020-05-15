@@ -101,8 +101,6 @@ class U_NET(nn.Module):
         self.up4 = Up_conv(128, 64)
 
         self.dropout = nn.Dropout(dropout_prob)
-        self.dropout2 = nn.Dropout(2*dropout_prob)
-        self.dropout3 = nn.Dropout(5*dropout_prob)
 
         # 1x1 convulution
         self.conv1x1 = nn.Conv2d(64, 1, kernel_size=1)
@@ -112,49 +110,49 @@ class U_NET(nn.Module):
         # U1
         x1 = self.conv1(x)
         x1 = self.conv2(x1)
-        #x1 = self.dropout(x1)
+        x1 = self.dropout(x1)
 
         #U2
         x2 = self.conv3(self.pool1(x1))
         x2 = self.conv4(x2)
-        #x2 = self.dropout(x2)
+        x2 = self.dropout(x2)
 
         # U3
         x3 = self.conv5(self.pool1(x2))
         x3 = self.conv6(x3)
-        #x3 = self.dropout2(x3)
+        x3 = self.dropout(x3)
 
         # U4
         x4 = self.conv7(self.pool1(x3))
         x4 = self.conv8(x4)
-        #x4 = self.dropout2(x4)
+        x4 = self.dropout(x4)
 
         # U5 lowest
         x5 = self.conv9(self.pool1(x4))
         x5 = self.conv10(x5)
-        #x5 = self.dropout3(x5)
+        x5 = self.dropout(x5)
 
         #Implement up-pass
 
         # U6
         x6 = self.conv11(torch.cat([self.up1(x5), x4], dim=1))
         x6 = self.conv8(x6)
-        #x6 = self.dropout2(x6)
+        x6 = self.dropout(x6)
 
         # U7
         x7 = self.conv12(torch.cat([ self.up2(x6), x3], dim=1))
         x7 = self.conv6(x7)
-        #x7 = self.dropout2(x7)
+        x7 = self.dropout(x7)
 
         # U8
         x8 = self.conv13(torch.cat([self.up3(x7),x2], dim=1))
         x8 = self.conv4(x8)
-        #x8 = self.dropout(x8)
+        x8 = self.dropout(x8)
 
         # U9
         x9 = self.conv14(torch.cat([ self.up4(x8), x1], dim=1))
         x9 = self.conv2(x9)
-        #x9 = self.dropout(x9)
+        x9 = self.dropout(x9)
 
         return self.sigmoid(self.conv1x1(x9))
 
@@ -282,5 +280,5 @@ if __name__ == '__main__':
         train(main_device, epochs=100, batch_size=1, loss_function="dice", learn_momentum=.99)
 
     if final_test:
-        train(main_device, epochs=800, batch_size=1, loss_function="bce", learn_decay=1e-9, learn_momentum=0.99, learn_rate=0.001)
+        #train(main_device, epochs=800, batch_size=1, loss_function="bce", learn_decay=1e-9, learn_momentum=0.99, learn_rate=0.001)
         train(main_device, epochs=800, batch_size=1, loss_function="dice", learn_decay=1e-9, learn_momentum=0.99, learn_rate=0.001)
