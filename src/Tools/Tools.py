@@ -47,7 +47,7 @@ def rand_error(prediction, target):
             true_negative += 1
     return 1 - (true_positive+true_negative) / (n*(n-1)/2)
 '''
-
+'''
 def rand_error_2(prediction, target):
     # Using the formula from here: https://imagej.net/Rand_error
     assert len(prediction) == len(target)
@@ -66,6 +66,7 @@ def rand_error_2(prediction, target):
                 b+=1
     d = (n*(n-1))/2
     return 1 - ((a+b)/d)
+'''
 
 def rand_error_3(prediction, target):
     return adapted_rand_error(prediction, target)

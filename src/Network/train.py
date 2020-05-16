@@ -53,8 +53,13 @@ def dice_coef(prediction, target):
     sum = torch.sum(iflat * iflat) + torch.sum(tflat * tflat)
     return ((2. * intersection + smooth) / (sum + smooth))
 
-
 def load_net_and_evaluate(device, loss_function="cross_ent"):
+    '''
+    Functionality not implemented yet, however the network are saved
+    :param device:
+    :param loss_function:
+    :return:
+    '''
     glob_path = os.path.dirname(os.path.realpath("src"))
     p = os.path.join(glob_path, "saved_nets")
     u_net = torch.load(p)

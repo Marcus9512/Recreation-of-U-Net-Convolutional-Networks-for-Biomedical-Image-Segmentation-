@@ -4,6 +4,7 @@ This is an assignment for the KTH course DD2424.
 
 The report this project is based on can be found [here](https://arxiv.org/pdf/1505.04597.pdf)
 
+![](git-image/bce.png) ![](git-image/dice.png) 
 ## Requirements
 * pytest
 * numpy
@@ -12,18 +13,19 @@ The report this project is based on can be found [here](https://arxiv.org/pdf/15
 
 ## Install requirements
 Run the following command in the terminal to install requirements.
-`pip3 install -r requirements.txt`
+`pip install -r requirements.txt`
 If you want more information about the available GPU install pycuda by:
-`pip3 install pycuda`
+`pip install pycuda`
 *Note* pycuda requiers [CUDA](https://developer.nvidia.com/cuda-downloads) and [Visual Studio](https://visualstudio.microsoft.com/)
 
 ## Run tests 
 Make sure that you are in the root folder for the project and run the command.
-`python3 -m pytest`
+`python -m pytest`
 
 ## Run the network
-* Run `python3 setup.py install --user`
-* Run `python3 src/network/U_net.py`
+In the main method in U_net.py you can select which tests that should be preformed. Set generate_augmented_data to true in order to generate data, note if you already have the data, set it to false.
+* Run `python setup.py install --user`
+* Run `python src/network/U_net.py`
 
 ## Tensorboard
 * You need tensorflow installed `pip install tensorflow`
