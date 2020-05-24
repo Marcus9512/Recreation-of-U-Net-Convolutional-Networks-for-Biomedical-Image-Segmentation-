@@ -6,5 +6,7 @@ elasticdeform>=0.4.6
 imageio>=2.8.0
 matplotlib>=3.2.0
 tensorboard>=1.14.0
+scikit-image>=0.17.1
 torchvision
 tensorflow
+scikit-image
