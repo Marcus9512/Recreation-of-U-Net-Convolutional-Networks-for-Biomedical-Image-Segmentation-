@@ -4,7 +4,7 @@ This is an assignment for the KTH course DD2424.
 
 The report this project is based on can be found [here](https://arxiv.org/pdf/1505.04597.pdf)
 
-![](git-image/bce.png) ![](git-image/dice.png) 
+![](git-images/bce.png) ![](git-images/dice.png) 
 ## Requirements
 * pytest
 * numpy
